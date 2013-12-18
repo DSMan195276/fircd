@@ -32,6 +32,7 @@ static const char shortopts[] = "hs:n:p:j:f:v";
  * then 255 (Greater then any char value) */
 #define OPT_HELP     'h'
 #define OPT_SERVER   's'
+#define OPT_SERVER_NAME 260
 #define OPT_PORT     256
 #define OPT_NICKNAME 'n'
 #define OPT_PASSWORD 'p'
@@ -47,6 +48,7 @@ static const char shortopts[] = "hs:n:p:j:f:v";
 static const struct option longopts[] = {
     { "help",        no_argument,       NULL, OPT_HELP },
     { "server",      required_argument, NULL, OPT_SERVER },
+    { "server-name", required_argument, NULL, OPT_SERVER_NAME },
     { "port",        required_argument, NULL, OPT_PORT },
     { "nickname",    required_argument, NULL, OPT_NICKNAME },
     { "password",    required_argument, NULL, OPT_PASSWORD },
@@ -111,6 +113,7 @@ void parse_cmd_args (int argc, char **argv)
             network_init(cur_net);
 
             cur_net->name = strdup(optarg);
+            cur_net->url  = strdup(optarg);
             cur_net->next = current_state->head;
             current_state->head = cur_net;
             break;
@@ -155,6 +158,11 @@ void parse_cmd_args (int argc, char **argv)
             break;
         case OPT_JOIN:
             network_add_channel(cur_net, optarg);
+            break;
+        case OPT_SERVER_NAME:
+            if (cur_net->name)
+                free(cur_net->name);
+            cur_net->name = strdup(optarg);
             break;
         default:
             break;

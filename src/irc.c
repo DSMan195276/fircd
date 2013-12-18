@@ -143,7 +143,7 @@ struct irc_reply *irc_parse_line (const char *line)
 void irc_connect (struct network *net)
 {
 	struct sockaddr_in sin;
-	struct hostent *hp = gethostbyname(net->name);
+	struct hostent *hp = gethostbyname(net->url);
 
 	memset(&sin, 0, sizeof(struct sockaddr_in));
 	if(!hp) {

@@ -275,6 +275,7 @@ void network_clear (struct network *current)
         network_delete_files(current);
 
     free(current->name);
+    free(current->url);
     free(current->realname);
     free(current->nickname);
     free(current->password);

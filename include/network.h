@@ -24,6 +24,7 @@ struct network {
     struct channel *head;
 
     char *name;
+    char *url;
     int   portno;
     struct buf_fd sock;
 
