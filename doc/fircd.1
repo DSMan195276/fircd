@@ -1,0 +1,47 @@
+.TH fircd 1
+.SH NAME
+fircd \- A filesystem-based IRC client
+.SH SYNOPSIS
+.B fircd
+.RI [ options ]
+.SH DESCRIPTION
+A file-system based IRC client.
+.SH OPTIONS
+.TP
+.BI \-h,\ \-\-help
+Output a brief help message.
+.TP
+.BI \-s,\ \-\-server\ <server\ address>
+Specify an IRC server to connect to on startup (This option may be used more then once for multiple servers)
+.TP
+.BI \-\-port\ <port\ number>
+Specify the port to use for the specified IRC server
+.TP
+.BI \-n,\ \-\-nickname\ <nickname>
+Specify the nickname to use for the specified IRC server
+.TP
+.BI \-p,\ \-\-password\ <password>
+Specify the password for the supplied nickname
+.TP
+.BI \-c,\ \-\-channel\ <channel>
+Specify a channel to connect to on the specified IRC server (This option may be used more then once for multiple channels)
+.TP
+.BI \-f,\ \-\-config-file\ <filename>
+Specify an alternate configuration file to use
+.TP
+.BI \-\-no\-config
+This option keeps fircd from loading any type of config file on startup
+.TP
+.BI \-\-forground
+This option keeps fircd in the forground and keeps it from forking on startup
+.TP
+.BI \-v,\ \-\-version
+Display program version information
+.SH SEE ALSO
+fircd.conf(5)
+.SH BUGS
+If you find a bug, please report it at
+.br
+<\fBhttp://github.com/DSMan195276/fircd\fP>.
+.SH AUTHORS
+Matt Kilgore <mattkilgore12@gmail.com>

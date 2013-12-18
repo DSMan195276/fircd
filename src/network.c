@@ -1,0 +1,298 @@
+/*
+ * Copyright (C) 2013 Matt Kilgore
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License v2 as published by the
+ * Free Software Foundation.
+ */
+
+#include "global.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/select.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include "debug.h"
+#include "buf.h"
+#include "channel.h"
+#include "fircd.h"
+#include "irc.h"
+#include "replies.h"
+#include "network.h"
+
+void network_init(struct network *net)
+{
+    memset(net, 0, sizeof(struct network));
+    net->portno = DEFAULT_PORT;
+    net->clear_files = 1;
+
+    buf_init(&net->sock);
+    buf_init(&net->cmdfd);
+    net->joinedfd = -1;
+    net->motdfd = -1;
+    net->rawfd = -1;
+    net->realnamefd = -1;
+    net->nicknamefd = -1;
+}
+
+void network_setup_files (struct network *net)
+{
+    struct channel *tmp;
+
+    if (!net->name)
+        return ;
+
+    mkdir(net->name, 0775);
+    chdir(net->name);
+
+    OPEN_FIFO(net, cmd);
+
+    OPEN_FILE(net, raw);
+    OPEN_FILE(net, joined);
+    OPEN_FILE(net, motd);
+    OPEN_FILE(net, realname);
+    OPEN_FILE(net, nickname);
+
+    chdir("..");
+
+    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+        channel_setup_files(tmp);
+}
+
+void network_delete_files (struct network *net)
+{
+    DEBUG_PRINT("Removing files...");
+    chdir(net->name);
+
+    unlink("cmd");
+    unlink("raw");
+    unlink("joined");
+    unlink("motd");
+    unlink("realname");
+    unlink("nickname");
+
+    chdir("..");
+    rmdir(net->name);
+}
+
+void network_init_select_desc(struct network *net)
+{
+    struct channel *tmp;
+
+    ADD_FD_CUR_STATE(net->sock.fd);
+    ADD_FD_CUR_STATE(net->cmdfd.fd);
+
+    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+        channel_init_select_desc(tmp);
+}
+
+static void handle_cmd_line (struct network *net, char *line)
+{
+
+}
+
+static void handle_irc_line (struct network *net, char *line)
+{
+    struct reply_handler *hand;
+    struct irc_reply *rpl;
+    int index;
+    network_write_raw(net, line);
+
+    rpl = irc_parse_line(line);
+
+    if(rpl == NULL)
+        DEBUG_PRINT("!!!!ERROR!!!!");
+
+    DEBUG_PRINT("Reply:");
+    DEBUG_PRINT("Prefix: %s", rpl->prefix.raw);
+    DEBUG_PRINT("Prefix User: %s", rpl->prefix.user);
+    DEBUG_PRINT("Prefix Host: %s", rpl->prefix.host);
+    DEBUG_PRINT("Code: %d", rpl->code);
+    DEBUG_PRINT("Cmd: %s", rpl->cmd);
+
+    ARRAY_FOREACH(*rpl, lines, index)
+        DEBUG_PRINT("Line %d: %s", index, rpl->lines[index]);
+
+    DEBUG_PRINT("Colon: %s", rpl->colon);
+
+    for (hand = reply_handler_list; hand->handler != NULL; hand++) {
+        if (hand->cmd && rpl->cmd) {
+            if (strcmp(hand->cmd, rpl->cmd) == 0) {
+                (hand->handler) (net, rpl);
+                goto cleanup;
+            }
+        } else if (hand->code > 0) {
+            if (hand->code == rpl->code) {
+                (hand->handler) (net, rpl);
+                goto cleanup;
+            }
+        }
+    }
+
+    if (hand->handler == NULL)
+        (reply_handler_list[0].handler) (net, rpl);
+
+cleanup:
+    irc_reply_free(rpl);
+}
+
+void network_handle_input (struct network *net)
+{
+    struct channel *tmp;
+    if (FD_ISSET(net->cmdfd.fd, &current_state->infd)) {
+        buf_handle_input(&(net->cmdfd));
+        while (net->cmdfd.has_line > 0) {
+            char *line = buf_read_line(&(net->cmdfd));
+            handle_cmd_line(net, line);
+            free(line);
+        }
+    }
+    
+    if (FD_ISSET(net->sock.fd, &current_state->infd)) {
+        buf_handle_input(&(net->sock));
+        if (net->sock.closed_gracefully) {
+            DEBUG_PRINT("Connection to %s was closed", net->name);
+            net->close_network = 1;
+        }
+        while (net->sock.has_line > 0) {
+            char *line = buf_read_line(&(net->sock));
+            line[strlen(line)] = '\0';
+            handle_irc_line(net, line);
+            free(line);
+        }
+    }
+
+    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+        channel_handle_input(tmp);
+}
+
+void network_connect(struct network *net)
+{
+    struct channel *tmp;
+    irc_connect(net);
+    if (net->close_network)
+        return ;
+
+    irc_nick(net);
+    network_write_nick(net);
+    irc_user(net);
+    network_write_realname(net);
+    if (net->password)
+        irc_pass(net);
+
+    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+        irc_join(net, tmp->name);
+
+    network_write_joined(net);
+}
+
+struct channel *network_add_channel (struct network *net, const char *channel)
+{
+    struct channel *tmp_chan;
+    tmp_chan = malloc(sizeof(struct channel));
+    channel_init(tmp_chan);
+    tmp_chan->name = strdup(channel);
+
+    tmp_chan->net  = net;
+    tmp_chan->next = net->head;
+    net->head  = tmp_chan;
+
+    channel_setup_files(tmp_chan);
+
+    return tmp_chan;
+}
+
+void network_write_raw (struct network *net, const char *text)
+{
+    if (text) {
+        write(net->rawfd, text, strlen(text));
+        write(net->rawfd, "\n", 1);
+    }
+}
+
+void network_write_nick (struct network *net)
+{
+    ftruncate(net->nicknamefd, 0);
+    lseek(net->nicknamefd, 0, SEEK_SET);
+    if (net->nickname)
+        write(net->nicknamefd, net->nickname, strlen(net->nickname));
+}
+
+void network_write_realname (struct network *net)
+{
+    ftruncate(net->realnamefd, 0);
+    lseek(net->realnamefd, 0, SEEK_SET);
+    if (net->realname)
+        write(net->realnamefd, net->realname, strlen(net->realname));
+    else
+        write(net->realnamefd, net->nickname, strlen(net->nickname));
+}
+
+void network_write_motd_start (struct network *net)
+{
+    const char motd_start[] = "New MOTD:\n";
+    write(net->motdfd, motd_start, sizeof(motd_start));
+}
+
+void network_write_motd_line (struct network *net, const char *motd)
+{
+    write(net->motdfd, motd, strlen(motd));
+    write(net->motdfd, "\n", 1);
+}
+
+void network_write_joined (struct network *net)
+{
+    struct channel *chan;
+    ftruncate(net->joinedfd, 0);
+    lseek(net->joinedfd, 0, SEEK_SET);
+    for (chan = net->head; chan != NULL; chan = chan->next) {
+        write(net->joinedfd, chan->name, strlen(chan->name));
+        write(net->joinedfd, "\n", 1);
+    }
+}
+
+void network_clear (struct network *current)
+{
+    int i;
+    
+    channel_clear_all(current->head);
+    
+    CLOSE_FD_BUF(current->sock);
+    CLOSE_FD_BUF(current->cmdfd);
+    CLOSE_FD(current->joinedfd);
+    CLOSE_FD(current->motdfd);
+    CLOSE_FD(current->rawfd);
+    CLOSE_FD(current->realnamefd);
+    CLOSE_FD(current->nicknamefd);
+
+    if (current->clear_files)
+        network_delete_files(current);
+
+    free(current->name);
+    free(current->realname);
+    free(current->nickname);
+    free(current->password);
+
+    ARRAY_FOREACH(*current, joined, i)
+        free(current->joined[i]);
+    ARRAY_FREE(*current, joined);
+}
+
+void network_clear_all(struct network *net)
+{
+    struct network *tmp, *current = net;
+    for (; current != NULL; current = tmp) {
+        tmp = current->next;
+
+        network_clear(current);
+
+        free(current);
+    }
+}
+
