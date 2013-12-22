@@ -14,37 +14,40 @@
 #include <string.h> /* memset() */
 
 #define ARRAY(type, name) \
-    unsigned int name##_size, name##_alloc; \
-    type *name
+    struct { \
+        unsigned int _size, _alloc; \
+        type *arr; \
+    } name
 
-#define ARRAY_SIZE(str, name) ((str).name##_size)
 
-#define ARRAY_RESIZE(str, name, size) \
+#define ARRAY_SIZE(array) ((array)._size)
+
+#define ARRAY_RESIZE(array, size) \
     do { \
         unsigned int size_tmp = (size), total_size = 0; \
-        void *start = (str).name; \
+        void *start = (array).arr; \
         const unsigned int block_size = 100; \
-        if ((str).name##_alloc <= (size_tmp)) { \
+        if ((array)._alloc <= (size_tmp)) { \
             do { \
                 total_size += block_size; \
-                (str).name##_alloc += block_size; \
-            } while ((str).name##_alloc <= (size_tmp)); \
-            (str).name = realloc((str).name, \
-                    (sizeof((str).name) / sizeof((str).name[0])) * (str).name##_alloc); \
-            start = (str).name + (str).name##_size * (sizeof(str).name / sizeof(str).name[0]); \
-            memset(start, 0, total_size * (sizeof(str).name / sizeof(str).name[0])); \
+                (array)._alloc += block_size; \
+            } while ((array)._alloc <= (size_tmp)); \
+            (array).arr = realloc((array).arr, \
+                    (sizeof((array).arr) / sizeof((array).arr[0])) * (array)._alloc); \
+            start = (array).arr + (array)._size * (sizeof(array).arr / sizeof(array).arr[0]); \
+            memset(start, 0, total_size * (sizeof(array).arr / sizeof(array).arr[0])); \
         } \
-        (str).name##_size = (size_tmp); \
+        (array)._size = (size_tmp); \
     } while (0)
 
-#define ARRAY_FOREACH(str, name, index) for (index = 0; index < (str).name##_size; index++)
+#define ARRAY_FOREACH(array, index) for (index = 0; index < (array)._size; index++)
 
-#define ARRAY_FREE(str, name) \
+#define ARRAY_FREE(array) \
     do { \
-        free((str).name); \
-        (str).name = NULL; \
-        (str).name##_size = 0; \
-        (str).name##_alloc = 0; \
+        free((array).arr); \
+        (array).arr = NULL; \
+        (array)._size = 0; \
+        (array)._alloc = 0; \
     } while (0)
 
 #endif

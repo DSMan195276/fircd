@@ -171,9 +171,9 @@ int config_read(struct config *conf, const char *filename)
         size = cfg_size(cfg, "auto-login");
         if (size > 0) {
             DEBUG_PRINT("Array size: %d", size);
-            ARRAY_RESIZE(*conf, auto_login, size);
+            ARRAY_RESIZE(conf->auto_login, size);
             for (i = 0; i < size; i++)
-                conf->auto_login[i] = strdup(cfg_getnstr(cfg, "auto-login", i));
+                conf->auto_login.arr[i] = strdup(cfg_getnstr(cfg, "auto-login", i));
         }
 
         ret = 0;
@@ -191,8 +191,8 @@ void config_clear(struct config *conf)
     int i;
     network_clear_all(conf->first);
     free(conf->root_directory);
-    ARRAY_FOREACH(*conf, auto_login, i)
-        free(conf->auto_login[i]);
-    ARRAY_FREE(*conf, auto_login);
+    ARRAY_FOREACH(conf->auto_login, i)
+        free(conf->auto_login.arr[i]);
+    ARRAY_FREE(conf->auto_login);
 }
 

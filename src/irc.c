@@ -29,11 +29,11 @@ void irc_reply_free (struct irc_reply *rpl)
     free(rpl->prefix.user);
     free(rpl->prefix.host);
 
-    DEBUG_PRINT("Array size: %d", ARRAY_SIZE(*rpl, lines));
+    DEBUG_PRINT("Array size: %d", ARRAY_SIZE(rpl->lines));
 
-    ARRAY_FOREACH(*rpl, lines, index)
-        free(rpl->lines[index]);
-    ARRAY_FREE(*rpl, lines);
+    ARRAY_FOREACH(rpl->lines, index)
+        free(rpl->lines.arr[index]);
+    ARRAY_FREE(rpl->lines);
     free(rpl->colon);
     free(rpl->cmd);
     free(rpl);
@@ -117,11 +117,11 @@ struct irc_reply *irc_parse_line (const char *line)
             exit_flag = 1;
             break;
         case ' ':
-            size = ARRAY_SIZE(*rpl, lines);
-            ARRAY_RESIZE(*rpl, lines, size + 1);
-            rpl->lines[size] = malloc(tmp - cur + 1);
-            memcpy(rpl->lines[size], cur, tmp - cur);
-            rpl->lines[size][tmp - cur] = '\0';
+            size = ARRAY_SIZE(rpl->lines);
+            ARRAY_RESIZE(rpl->lines, size + 1);
+            rpl->lines.arr[size] = malloc(tmp - cur + 1);
+            memcpy(rpl->lines.arr[size], cur, tmp - cur);
+            rpl->lines.arr[size][tmp - cur] = '\0';
             cur = tmp + 1;
             break;
         default:
@@ -131,10 +131,10 @@ struct irc_reply *irc_parse_line (const char *line)
 
     if (!exit_flag) {
         len = strlen(cur);
-        size = ARRAY_SIZE(*rpl, lines);
-        ARRAY_RESIZE(*rpl, lines, size + 1);
-        rpl->lines[size] = malloc(len + 1);
-        strcpy(rpl->lines[size], cur);
+        size = ARRAY_SIZE(rpl->lines);
+        ARRAY_RESIZE(rpl->lines, size + 1);
+        rpl->lines.arr[size] = malloc(len + 1);
+        strcpy(rpl->lines.arr[size], cur);
     }
 
     return rpl;

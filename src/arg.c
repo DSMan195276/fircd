@@ -108,9 +108,9 @@ void parse_cmd_args (int argc, char **argv)
             current_state->dont_auto_load = 1;
             break;
         case OPT_NET:
-            size = ARRAY_SIZE(current_state->conf, auto_login);
-            ARRAY_RESIZE(current_state->conf, auto_login, size + 1);
-            current_state->conf.auto_login[size] = strdup(optarg);
+            size = ARRAY_SIZE(current_state->conf.auto_login);
+            ARRAY_RESIZE(current_state->conf.auto_login, size + 1);
+            current_state->conf.auto_login.arr[size] = strdup(optarg);
             DEBUG_PRINT("Auto-starting network %s", optarg);
             break;
         default:

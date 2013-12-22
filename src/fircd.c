@@ -94,9 +94,9 @@ static void setup_auto_load(void)
 {
     struct network *tmp, *cur;
     int i;
-    ARRAY_FOREACH(current_state->conf, auto_login, i) {
+    ARRAY_FOREACH(current_state->conf.auto_login, i) {
         for (cur = current_state->conf.first; cur != NULL; cur = cur->next)
-            if (strcmp(cur->name, current_state->conf.auto_login[i]) == 0)
+            if (strcmp(cur->name, current_state->conf.auto_login.arr[i]) == 0)
                 break;
         if (cur != NULL) {
             tmp = network_copy(cur);

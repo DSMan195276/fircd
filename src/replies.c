@@ -44,21 +44,21 @@ REPLY_HANDLER(privmsg)
 
     user = rpl->prefix.user;
 
-    DEBUG_PRINT("PRIVMSG: %s %s", user, rpl->lines[0]);
+    DEBUG_PRINT("PRIVMSG: %s %s", user, rpl->lines.arr[0]);
 
     for (chan = net->head; chan != NULL; chan = chan->next) {
         DEBUG_PRINT("Checking channel: %s", chan->name);
-        if (strcmp(rpl->lines[0], chan->name) == 0) {
+        if (strcmp(rpl->lines.arr[0], chan->name) == 0) {
             channel_write_msg (chan, user, rpl->colon);
             return;
         }
     }
 
     /* Add this new channel */
-    if (strcmp(rpl->lines[0], net->nickname) == 0)
+    if (strcmp(rpl->lines.arr[0], net->nickname) == 0)
         chan = network_add_channel(net, user);
     else
-        chan = network_add_channel(net, rpl->lines[0]);
+        chan = network_add_channel(net, rpl->lines.arr[0]);
 
     channel_setup_files(chan);
 
@@ -77,7 +77,7 @@ REPLY_HANDLER(topic)
 {
     struct channel *chan;
     for (chan = net->head; chan != NULL; chan = chan->next)
-        if (strcmp(rpl->lines[0], chan->name) == 0)
+        if (strcmp(rpl->lines.arr[0], chan->name) == 0)
             channel_write_topic(chan, rpl->colon);
 }
 

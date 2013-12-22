@@ -116,8 +116,8 @@ static void handle_irc_line (struct network *net, char *line)
     DEBUG_PRINT("Code: %d", rpl->code);
     DEBUG_PRINT("Cmd: %s", rpl->cmd);
 
-    ARRAY_FOREACH(*rpl, lines, index)
-        DEBUG_PRINT("Line %d: %s", index, rpl->lines[index]);
+    ARRAY_FOREACH(rpl->lines, index)
+        DEBUG_PRINT("Line %d: %s", index, rpl->lines.arr[index]);
 
     DEBUG_PRINT("Colon: %s", rpl->colon);
 
@@ -308,9 +308,9 @@ void network_clear (struct network *current)
     free(current->nickname);
     free(current->password);
 
-    ARRAY_FOREACH(*current, joined, i)
-        free(current->joined[i]);
-    ARRAY_FREE(*current, joined);
+    ARRAY_FOREACH(current->joined, i)
+        free(current->joined.arr[i]);
+    ARRAY_FREE(current->joined);
 }
 
 void network_clear_all(struct network *net)

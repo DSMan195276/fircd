@@ -116,9 +116,9 @@ void channel_clear(struct channel *current)
 
     free(current->name);
 
-    ARRAY_FOREACH(*current, nicks, i)
-        free(current->nicks[i]);
-    ARRAY_FREE(*current, nicks);
+    ARRAY_FOREACH(current->nicks, i)
+        free(current->nicks.arr[i]);
+    ARRAY_FREE(current->nicks);
 
     free(current);
 }
