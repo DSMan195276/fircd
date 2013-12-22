@@ -30,7 +30,7 @@ void network_init(struct network *net)
 {
     memset(net, 0, sizeof(struct network));
     net->portno = DEFAULT_PORT;
-    net->clear_files = 1;
+    net->remove_files_on_close = current_state->conf.remove_files_on_close;
 
     buf_init(&net->sock);
     buf_init(&net->cmdfd);
@@ -153,7 +153,7 @@ void network_handle_input (struct network *net)
             free(line);
         }
     }
-    
+
     if (FD_ISSET(net->sock.fd, &current_state->infd)) {
         buf_handle_input(&(net->sock));
         if (net->sock.closed_gracefully) {
@@ -192,6 +192,36 @@ void network_connect(struct network *net)
     network_write_joined(net);
 }
 
+struct network *network_copy (struct network *net)
+{
+    struct channel *tmp;
+    struct network *newnet = malloc(sizeof(struct network));
+
+    network_init(newnet);
+
+    if (net->name)
+        newnet->name = strdup(net->name);
+    if (net->url)
+        newnet->url = strdup(net->url);
+
+    newnet->portno = net->portno;
+
+    if (net->nickname)
+        newnet->nickname = strdup(net->nickname);
+    if (net->realname)
+        newnet->realname = strdup(net->realname);
+    if (net->password)
+        newnet->password = strdup(net->password);
+
+    newnet->remove_files_on_close = net->remove_files_on_close;
+    newnet->close_network = net->close_network;
+
+    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+        network_add_channel(newnet, tmp->name);
+
+    return newnet;
+}
+
 struct channel *network_add_channel (struct network *net, const char *channel)
 {
     struct channel *tmp_chan;
@@ -202,8 +232,6 @@ struct channel *network_add_channel (struct network *net, const char *channel)
     tmp_chan->net  = net;
     tmp_chan->next = net->head;
     net->head  = tmp_chan;
-
-    channel_setup_files(tmp_chan);
 
     return tmp_chan;
 }
@@ -260,9 +288,9 @@ void network_write_joined (struct network *net)
 void network_clear (struct network *current)
 {
     int i;
-    
+
     channel_clear_all(current->head);
-    
+
     CLOSE_FD_BUF(current->sock);
     CLOSE_FD_BUF(current->cmdfd);
     CLOSE_FD(current->joinedfd);
@@ -271,7 +299,7 @@ void network_clear (struct network *current)
     CLOSE_FD(current->realnamefd);
     CLOSE_FD(current->nicknamefd);
 
-    if (current->clear_files)
+    if (current->remove_files_on_close)
         network_delete_files(current);
 
     free(current->name);

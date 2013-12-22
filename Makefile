@@ -34,8 +34,8 @@ install_$(EXE): $(EXE)
 	$(Q)mkdir -p $(BINDIR)
 	$(Q)mkdir -p $(DOCDIR)
 	$(Q)install -d $(BINDIR) $(DOCDIR)
-	@echo " INSTALL README.md LICENSE doc/fircdconf.example"
-	$(Q)install -m 644 README.md LICENSE doc/fircdconf.example $(DOCDIR)
+	@echo " INSTALL README.md LICENSE doc/fircdrc.example"
+	$(Q)install -m 644 README.md LICENSE doc/fircdrc.example $(DOCDIR)
 	@echo " INSTALL fircd"
 	$(Q)install -m 775 fircd $(BINDIR)
 	@echo " $(EXE) Installation done"
@@ -46,8 +46,6 @@ install_doc: doc
 	$(Q)install -d $(MAN5DIR) $(MAN1DIR)
 	@echo " INSTALL doc/fircd.1"
 	$(Q)install -m 444 doc/fircd.1 $(MAN1DIR)
-	@echo " INSTALL doc/fircd.conf.5"
-	$(Q)install -m 444 doc/fircd.conf.5 $(MAN5DIR)
 	@echo " Doc Installation done"
 
 clean:

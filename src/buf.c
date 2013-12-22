@@ -1,6 +1,6 @@
 /*
- * ./include/buf.c -- Implements a resizeable buffer around a file descriptor
- *                    
+ * ./buf.c -- Implements a resizeable buffer around a file descriptor
+ *
  * It is designed to be very memory efficent and fast, reading chunks of data
  * at a time instead of reading one byte at a time. The buffer of read data is
  * stored in a linked-list of allocated blocks, where each block holds a
@@ -152,7 +152,7 @@ char *buf_read_line(struct buf_fd *buf)
     found_newline = 0;
 
     for (cur_block = buf->head; cur_block != NULL && found_newline == 0; cur_block = tmp) {
-        tmp = cur_block->next_blk; 
+        tmp = cur_block->next_blk;
         for (i = cur_block->offset; i < cur_block->size; i++) {
             if (cur_block->buf[i] == '\n') {
                 found_newline = 1;

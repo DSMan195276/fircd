@@ -1,0 +1,38 @@
+# Example fircd config file
+
+# Global settings
+
+# If this is true, then fircd will not fork into the background on startup
+stay-in-forground = false
+
+# If this is true, then all files will be removed on close (Reguardless of internal settings)
+remove-files-on-close = false
+
+# This is a list of all the networks to start on start-up
+auto-login = {"fn"}
+
+# This is an example definition of a network called 'fn'
+network fn {
+    # 'server' is the URL to used to connect to the network
+    server = irc.freenode.net
+
+    # The port number to use with the URL
+    port = 6667
+
+    # This is a network-global setting. This network will be deleted when it is
+    # closed reguardless of whether or not the global setting for
+    # 'remove-files-on-close' is set
+    remove-files-on-close = true
+
+    # Nickname, realname, and password (Optional)
+    nickname = fircd-test-user
+    realname = fircd-test-user
+    password = test
+
+    # How to go about logging in (Ex. nickserv, sasl, etc.)
+    login_type = nickserv
+
+    # List of channels to load up on this network in start-up
+    channels = {"#fircd"}
+}
+

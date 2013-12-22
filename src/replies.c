@@ -41,9 +41,9 @@ REPLY_HANDLER(privmsg)
 {
     struct channel *chan;
     char *user;
-   
+
     user = rpl->prefix.user;
-    
+
     DEBUG_PRINT("PRIVMSG: %s %s", user, rpl->lines[0]);
 
     for (chan = net->head; chan != NULL; chan = chan->next) {
@@ -59,6 +59,9 @@ REPLY_HANDLER(privmsg)
         chan = network_add_channel(net, user);
     else
         chan = network_add_channel(net, rpl->lines[0]);
+
+    channel_setup_files(chan);
+
     channel_write_msg(chan, user, rpl->colon);
 }
 

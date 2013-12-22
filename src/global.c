@@ -16,17 +16,10 @@
 
 #include "debug.h"
 #include "fircd.h"
+#include "config.h"
 #include "buf.h"
 
 struct network_cons *current_state = NULL;
-
-static const char default_directory[]   = "/tmp/irc";
-
-static const struct config default_config = {
-    .stay_in_forground = 0,
-    .no_config = 0
-};
-
 
 static char *valloc_sprintf (const char *format, va_list lst)
 {
@@ -60,7 +53,7 @@ static void network_cons_clear(struct network_cons *con)
     config_clear(&(con->conf));
 
     buf_free(&con->cmdfd);
-    
+
     unlink("cmd");
 
     free(con->config_file);
@@ -73,14 +66,10 @@ void current_state_init(void)
     memset(current_state, 0, sizeof(struct network_cons));
 
     buf_init(&current_state->cmdfd);
-    current_state->conf = default_config;
-    current_state->dir = strdup(default_directory);
-
 }
 
 void current_state_clear(void)
 {
-
     network_cons_clear(current_state);
     free(current_state);
 }

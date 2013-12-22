@@ -142,26 +142,26 @@ struct irc_reply *irc_parse_line (const char *line)
 
 void irc_connect (struct network *net)
 {
-	struct sockaddr_in sin;
-	struct hostent *hp = gethostbyname(net->url);
+    struct sockaddr_in sin;
+    struct hostent *hp = gethostbyname(net->url);
 
-	memset(&sin, 0, sizeof(struct sockaddr_in));
-	if(!hp) {
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    if(!hp) {
         net->close_network = 1;
-	}
-	sin.sin_family = AF_INET;
-	memcpy(&sin.sin_addr, hp->h_addr_list[0], hp->h_length);
-	sin.sin_port = htons(net->portno);
-	if((net->sock.fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    }
+    sin.sin_family = AF_INET;
+    memcpy(&sin.sin_addr, hp->h_addr_list[0], hp->h_length);
+    sin.sin_port = htons(net->portno);
+    if((net->sock.fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         net->close_network = 1;
         return ;
     }
 
-	if(connect(net->sock.fd, (const struct sockaddr *) &sin, sizeof(sin)) < 0) {
+    if(connect(net->sock.fd, (const struct sockaddr *) &sin, sizeof(sin)) < 0) {
         net->close_network = 1;
         return ;
-	}
-    
+    }
+
     fcntl(net->sock.fd, F_SETFL, O_NONBLOCK | fcntl(net->sock.fd, F_GETFL));
 }
 

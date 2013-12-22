@@ -9,16 +9,21 @@
 #define INCLUDE_CONFIG_H
 
 #include "global.h"
+#include "network.h"
+#include "array.h"
 
 struct config {
+    ARRAY(char*, auto_login);
+    struct network *first;
+    char *root_directory;
+
     unsigned int stay_in_forground :1;
-    unsigned int no_config :1;
+    unsigned int remove_files_on_close :1;
 };
 
 extern int config_file_parse(void);
 
-extern void config_read (struct config *conf, const char *filename);
-extern void config_write (struct config *conf, const char *filename);
+extern int config_read (struct config *conf, const char *filename);
 extern void config_clear (struct config *conf);
 
 #endif

@@ -45,7 +45,7 @@ void channel_setup_files(struct channel *chan)
     OPEN_FILE(chan, out);
     OPEN_FILE(chan, online);
     OPEN_FILE(chan, topic);
-    
+
     chdir("..");
     chdir("..");
 }
@@ -105,13 +105,13 @@ void channel_delete_files(struct channel *chan)
 void channel_clear(struct channel *current)
 {
     int i;
-    
+
     CLOSE_FD_BUF(current->infd);
     CLOSE_FD(current->outfd);
     CLOSE_FD(current->onlinefd);
     CLOSE_FD(current->topicfd);
 
-    if (current->net->clear_files)
+    if (current->net->remove_files_on_close)
         channel_delete_files(current);
 
     free(current->name);

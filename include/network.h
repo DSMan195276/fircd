@@ -18,10 +18,18 @@
 
 #define DEFAULT_PORT 6667
 
+enum network_login {
+    LOGIN_NONE,
+    LOGIN_NICKSERV,
+    LOGIN_SASL
+};
+
 struct network {
     struct network *next;
 
     struct channel *head;
+
+    enum network_login login_type;
 
     char *name;
     char *url;
@@ -35,7 +43,7 @@ struct network {
     struct buf_fd cmdfd;
     int joinedfd, motdfd, rawfd, realnamefd, nicknamefd;
 
-    unsigned int clear_files :1;
+    unsigned int remove_files_on_close :1;
     unsigned int close_network :1;
 };
 
@@ -44,8 +52,9 @@ extern void network_init_select_desc (struct network *);
 extern void network_setup_files      (struct network *);
 extern void network_handle_input     (struct network *);
 extern void network_connect          (struct network *);
+extern struct network *network_copy  (struct network *);
 
-struct channel *network_add_channel (struct network *, const char *channel);
+extern struct channel *network_add_channel (struct network *, const char *channel);
 
 extern void network_quit      (struct network *);
 extern void network_clear     (struct network *);

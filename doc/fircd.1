@@ -11,34 +11,94 @@ A file-system based IRC client.
 .BI \-h,\ \-\-help
 Output a brief help message.
 .TP
-.BI \-s,\ \-\-server\ <server\ address>
-Specify an IRC server to connect to on startup (This option may be used more then once for multiple servers)
-.TP
-.BI \-\-port\ <port\ number>
-Specify the port to use for the specified IRC server
-.TP
-.BI \-n,\ \-\-nickname\ <nickname>
-Specify the nickname to use for the specified IRC server
-.TP
-.BI \-p,\ \-\-password\ <password>
-Specify the password for the supplied nickname
-.TP
-.BI \-c,\ \-\-channel\ <channel>
-Specify a channel to connect to on the specified IRC server (This option may be used more then once for multiple channels)
-.TP
-.BI \-f,\ \-\-config-file\ <filename>
-Specify an alternate configuration file to use
-.TP
-.BI \-\-no\-config
-This option keeps fircd from loading any type of config file on startup
-.TP
-.BI \-\-forground
-This option keeps fircd in the forground and keeps it from forking on startup
-.TP
 .BI \-v,\ \-\-version
 Display program version information
-.SH SEE ALSO
-fircd.conf(5)
+.TP
+.BI \-c,\ \-\-config-file\ <filename>
+Specify an alternate configuration file to use
+.TP
+.BI \-r,\ \-\-no\-config
+This option keeps fircd from loading any type of config file on startup
+.TP
+.BI \-f,\ \-\-forground
+This option keeps fircd in the forground and keeps it from forking on startup
+.TP
+.BI \-n,\ \-\-network\ <network\ name>
+Specifies a network (Which is defined in the configuration file) to load-up on startup
+.TP
+.BI \-d,\ \-\-dont\-auto\-login
+Specifies that when the configuration file is loaded, no networks specified in 'auto-load' will be started.
+.SH CONFIGURATION
+The default configuration file for fircd is located at '~/.fircdrc', where '~' refers to the contents of the "HOME" enviornment variable. Alternative configuration files can be specified as arguments to fircd, via the '--config-file' argument. An example configuration file can be found at /usr/share/doc/fircd/fircdrc.example.
+
+The configuration file consists of a few differnet sections: The global configuration options, and network definitions which include their own configuration options. Changes that are different from the default value in a global setting carry on to all networks. Any value that shares both a global and network version doesn't have a default value for networks, instead the current globally-used value becomes the default.
+
+The basic syntax is:
+
+.in +4n
+variable = value
+.in
+
+For defining networks, the syntax looks like this:
+.in +4n
+.nf
+.sp
+network name {
+   values
+}
+.fi
+.in
+
+Where 'name' is simply a unique name for that network setting. 'values' are defintions in the same syntax as the basic syntax of 'variable = value'. A configuration file is allowed to have any number of networks it wants. Every line that starts with a '#' is considered a comment and will not be parsed.
+
+.SH VARIABLE TYPES
+.SS String
+A String is any type of contiguous sequence of characters, such as "this is a string". If a String contains spaces, then it must be surounded in quotations, else the quotations are not required.
+.SS Integer
+An Integer is any positive or negative number without any fractional part. IE. '1234' is an Integer, '12.334' is not an Integer.
+.SS List
+A list is a set of values surounded in {}'s and separated by commas. Ex. {1,2,3,4} is a List of Integers, and {"1","2","3","4"} is a list of Strings.
+.SS Bool
+A Bool represents a variable who's value is allowed to be in one of two states, 'true' or 'false'. Valid values for true are "true", "yes", "on", where as valid values for false are "false", "no", "off".
+.SH CONFIGURATION OPTIONS
+.SS Global
+.TP
+.BI root\-directory\ =\ <String>
+This option sets the directory where fircd will create its file-structure. The default value is "/tmp/irc".
+.TP
+.BI stay\-in\-forground\ =\ <Bool>
+If this option is set to true, then fircd won't fork off into a background process. The default is false.
+.TP
+.BI remove\-files\-on\-close\ =\ <Bool>
+If this option is set to true, then fircd will delete all the files it created while running. The default is false.
+.TP
+.BI auto\-login\ =\ <List\ of\ Strings>
+auto-login is a List made-up of strings, where each string is the name of a network to automatically start when fircd starts. The default is empty.
+.SS Network
+.TP
+.BI server\ =\ <String>
+This option defines the URL to use to connect to the irc service. This is a required option for every network.
+.TP
+.BI port\ =\ <Integer>
+This option defines the port number to use when connecting to the server. It has a default value of 6667 (The standard IRC port number)
+.TP
+.BI remove\-files\-on\-close\ =\ <Bool>
+If this option is true, fircd will delete all the files for the network when it's closed. The default value is the value of the same-named global variable.
+.TP
+.BI nickname\ =\ <String>
+The nickname to use when logging into the network. This is a required option.
+.TP
+.BI realname\ =\ <String>
+This is the 'realname' to use for the network. The realname shows up in (among other things) the whois results for your username. If you don't specify a realname, it defaults to your username.
+.TP
+.BI password\ =\ <String>
+This is the password to use when logging-in to the network. It defaults to nothing. See 'login-type' to specify how to use the password.
+.TP
+.BI login\-type\ =\ <login\-type>
+This option specifies how to use the supplied password. It uses a special type with the valid options being 'none', 'nickserv', and 'sasl'. 'none' doesn't do any logging in (Thus the value of password is never used). 'nickserv' sends the message 'identify 'password'' to the user 'nickserv' and waits for a response before logging-in to any automatic channels. 'sasl' Uses SASL to login to the network. The default is 'none'.
+.TP
+.BI channels\ =\ <List\ of\ Strings>
+Similar to the 'auto-login' option, this variable takes a list of strings, each of which corespond to a channel name. Those channels will be automatically joined when the network is started. The default is an empty list.
 .SH BUGS
 If you find a bug, please report it at
 .br

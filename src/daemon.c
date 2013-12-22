@@ -31,7 +31,7 @@ static int still_in_parent = 0;
 static void sig_int_handler(int sig)
 {
     DEBUG_PRINT("Recieved signal: %d", sig);
-    daemon_kill();    
+    daemon_kill();
 }
 
 static void sig_segv_handler(int seg)
@@ -43,7 +43,7 @@ static void sig_segv_handler(int seg)
 void daemon_init(void)
 {
     pid_t pid;
-    
+
     fflush(NULL);
     umask(0);
 
@@ -72,7 +72,7 @@ void daemon_init(void)
         printf("Unable to chdir to root\n");
         daemon_kill();
     }
-    
+
     setsid();
 }
 

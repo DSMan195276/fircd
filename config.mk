@@ -13,14 +13,13 @@ CFLAGS  := $(CFLAGS) -Wall -I'./include' -O2 -std=c99 \
            -DFIRCD_SUBLEVEL=$(SUBLEVEL)               \
            -DFIRCD_PATCH=$(PATCH)                     \
            -DFIRCD_VERSION_N="$(VERSION_N)"
-LDFLAGS := $(LDFLAGS)
+LDFLAGS := $(LDFLAGS) -lconfuse
 
 # Install Paths
 PREFIX  := /usr
 BINDIR  := $(PREFIX)/bin
 MANDIR  := $(PREFIX)/share/man
 MAN1DIR := $(MANDIR)/man1
-MAN5DIR := $(MANDIR)/man5
 DOCDIR  := $(PREFIX)/share/doc/fircd
 
 # Configuration -- Uncomment lines to enable option

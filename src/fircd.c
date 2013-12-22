@@ -35,8 +35,8 @@ static void init_directory(void)
 {
     struct network *tmp;
 
-    mkdir(current_state->dir, 0755);
-    chdir(current_state->dir);
+    mkdir(current_state->conf.root_directory, 0755);
+    chdir(current_state->conf.root_directory);
 
     mkfifo("cmd", 0755);
     current_state->cmdfd.fd = open("cmd", O_RDWR | O_NONBLOCK, 0);
@@ -90,6 +90,22 @@ void handle_file_check(void)
     handle_networks();
 }
 
+static void setup_auto_load(void)
+{
+    struct network *tmp, *cur;
+    int i;
+    ARRAY_FOREACH(current_state->conf, auto_login, i) {
+        for (cur = current_state->conf.first; cur != NULL; cur = cur->next)
+            if (strcmp(cur->name, current_state->conf.auto_login[i]) == 0)
+                break;
+        if (cur != NULL) {
+            tmp = network_copy(cur);
+            tmp->next = current_state->head;
+            current_state->head = tmp;
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     DEBUG_INIT();
@@ -100,10 +116,11 @@ int main(int argc, char **argv)
     DEBUG_PRINT("Parsing arguments...");
     parse_cmd_args(argc, argv);
 
-    if (config_file_parse() == 1) {
-        printf("Error opening config file...\n");
+    if (config_file_parse() == 1)
         return 1;
-    }
+
+    if (!current_state->dont_auto_load)
+        setup_auto_load();
 
     if (!current_state->conf.stay_in_forground)
         daemon_init();
