@@ -22,6 +22,7 @@ struct reply_handler reply_handler_list[] = {
     { NULL,      RPL_MOTDSTART, reply_handler_motd },
     { NULL,      RPL_MOTD,      reply_handler_motd },
     { NULL,      RPL_TOPIC,     reply_handler_topic },
+    { "TOPIC",   0,             reply_handler_topic },
     { 0 }
 };
 
@@ -75,9 +76,19 @@ REPLY_HANDLER(motd)
 
 REPLY_HANDLER(topic)
 {
+    const char *chan_nam;
     struct channel *chan;
-    for (chan = net->head; chan != NULL; chan = chan->next)
-        if (strcmp(rpl->lines.arr[0], chan->name) == 0)
-            channel_write_topic(chan, rpl->colon);
+
+    if (rpl->code == 332)
+        chan_nam = rpl->lines.arr[1];
+    else
+        chan_nam = rpl->lines.arr[0];
+
+    DEBUG_PRINT("Got a TOPIC");
+    for (chan = net->head; chan != NULL; chan = chan->next) {
+        DEBUG_PRINT("Checking channel: %s", chan->name);
+        if (strcmp(chan_nam, chan->name) == 0)
+            channel_write_topic(chan, rpl->colon, rpl->prefix.user);
+    }
 }
 

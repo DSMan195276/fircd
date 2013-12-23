@@ -25,7 +25,7 @@ struct channel {
 
     ARRAY(char*, nicks);
     struct buf_fd infd;
-    int outfd, onlinefd, topicfd;
+    int outfd, onlinefd, topicfd, rawfd, msgsfd;
 };
 
 extern void channel_init (struct channel *);
@@ -37,8 +37,10 @@ extern void channel_setup_files (struct channel *);
 extern void channel_handle_input (struct channel *);
 extern void channel_handle_serv_line (struct channel *, const char *line);
 
+extern void channel_write_raw (struct channel *, const char *msg);
+extern void channel_write_out (struct channel *, const char *msg);
 extern void channel_write_msg (struct channel *, const char *user, const char *line);
-extern void channel_write_topic (struct channel *, const char *topic);
+extern void channel_write_topic (struct channel *, const char *topic, const char *user);
 
 extern void channel_clear (struct channel *);
 extern void channel_clear_all (struct channel *);
