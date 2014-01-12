@@ -10,6 +10,12 @@
 
 #define _XOPEN_SOURCE 600
 
+#include <stddef.h>
+
+/* Inspired via the Linux-kernel macro 'container_of' */
+#define container_of(ptr, type, member) \
+    ((type *) ((char*)(ptr) - offsetof(type, member)))
+
 #define QQ(x) #x
 #define Q(x) QQ(x)
 
