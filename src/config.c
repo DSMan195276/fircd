@@ -112,7 +112,7 @@ static void add_network(struct config *conf, cfg_t *network)
     net->name = sstrdup(cfg_title(network));
     net->url = sstrdup(cfg_getstr(network, "server"));
     net->portno = cfg_getint(network, "port");
-    if (cfg_getbool(network, "remove-files-on-close") != -1)
+    if ((int)cfg_getbool(network, "remove-files-on-close") != -1)
         net->remove_files_on_close = cfg_getbool(network, "remove-files-on-close");
     else
         net->remove_files_on_close = current_state->conf.remove_files_on_close;
