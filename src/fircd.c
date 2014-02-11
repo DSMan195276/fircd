@@ -21,17 +21,15 @@
 #include "debug.h"
 #include "config.h"
 #include "network.h"
-#include "daemon.h"
 #include "irc.h"
 #include "buf.h"
-#include "arg.h"
 #include "fircd.h"
 
 /*
  * This function initalizes the 'root' directory for fircd -- It creates it if
  * it doesn't exist, chdir's into it, and creates the main 'cmd' pipe.
  */
-static void init_directory(void)
+void init_directory(void)
 {
     struct network *tmp;
 
@@ -45,7 +43,7 @@ static void init_directory(void)
         network_setup_files(tmp);
 }
 
-static void init_networks(void)
+void init_networks(void)
 {
     struct network *tmp;
 
@@ -90,7 +88,7 @@ void handle_file_check(void)
     handle_networks();
 }
 
-static void setup_auto_load(void)
+void setup_auto_load(void)
 {
     struct network *tmp, *cur;
     int i;
@@ -104,35 +102,5 @@ static void setup_auto_load(void)
             current_state->head = tmp;
         }
     }
-}
-
-int main(int argc, char **argv)
-{
-    DEBUG_INIT();
-    DEBUG_PRINT("Starting up...");
-
-    current_state_init();
-
-    DEBUG_PRINT("Parsing arguments...");
-    parse_cmd_args(argc, argv);
-
-    if (config_file_parse() == 1)
-        return 1;
-
-    if (!current_state->dont_auto_load)
-        setup_auto_load();
-
-    if (!current_state->conf.stay_in_forground)
-        daemon_init();
-
-    init_directory();
-    init_networks();
-
-    daemon_main_loop();
-
-    /* We shouldn't get here. If we do then just die */
-    daemon_kill();
-
-    return 0;
 }
 
