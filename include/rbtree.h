@@ -22,7 +22,7 @@
 #define RB_RED   0
 #define RB_BLACK 1
 
-/* 
+/*
  * This is the main structure for a rb-tree. This is meant to be used in
  * conjunction with container_of to embed it into an eternal structure.
  *
@@ -59,7 +59,7 @@ struct rbnode {
 #define rb_is_red(node) (__rb_is_red((node)->_parent_color))
 #define rb_is_black(node) (__rb_is_black((node)->_parent_color))
 
-/* 
+/*
  * enum representing the possible results from a rbtree comparision function.
  * These relate in comparision of the first argument to the second argument.
  *
@@ -122,22 +122,28 @@ extern void rb_remove (struct rbtree *, struct rbnode *);
 extern struct rbnode *rb_search (struct rbtree *, const struct rbnode *);
 
 /*
+ * Opaque type for handling traversal state. You shouldn't ever access these
+ * members, nor care what they are.
+ */
+typedef struct {
+    struct rbnode *current;
+    struct rbnode *parent;
+    int from;
+} rb_trav_state;
+
+/*
  * These functions implement three different traversals over a rb-tree:
  * preorder  (parent, left, right)
  * inorder   (left, parent, right)
  * postorder (left, right, parent)
- *
- * All of the traversals are implemented in an iterative fashion (Not
- * recursive) (So it's faster, and big trees won't blow-up the stack).
- *
- * Because of the useful ness in using a postorder traversal to free the
- * contents of a tree, the postorder traversal function is guarenteed to never
- * dereference the pointer sent to the callback after it is called, so you are
- * free to free the pointer and make it invalid.
  */
-extern void rb_trav_preorder  (struct rbtree *, void (*callback) (struct rbtree *, struct rbnode *));
-extern void rb_trav_inorder   (struct rbtree *, void (*callback) (struct rbtree *, struct rbnode *));
-extern void rb_trav_postorder (struct rbtree *, void (*callback) (struct rbtree *, struct rbnode *));
+extern struct rbnode *rb_trav_first_preorder  (struct rbtree *, rb_trav_state *);
+extern struct rbnode *rb_trav_first_inorder   (struct rbtree *, rb_trav_state *);
+extern struct rbnode *rb_trav_first_postorder (struct rbtree *, rb_trav_state *);
+
+extern struct rbnode *rb_trav_next_preorder  (rb_trav_state *);
+extern struct rbnode *rb_trav_next_inorder   (rb_trav_state *);
+extern struct rbnode *rb_trav_next_postorder (rb_trav_state *);
 
 /*
  * This is an example implementation of a rbnode containing simple string data.
@@ -154,12 +160,9 @@ extern struct rbnode_char *rb_char_alloc (const char *);
 /* This is the comparision function that should be used by rbtree's containing rbnode_char's */
 extern enum rbcomp rb_char_comp (const struct rbnode *, const struct rbnode *);
 
-/* 
- * These are used to free an rbnode_char structure allocated via rb_char_alloc.
- * rb_char_free_callback can be used with rb_trav_postorder to free an entire
- * tree of rbnode_char's, rb_char_free can be used to free a single rbnode_char
+/*
+ * This is used to free a rbnode_char structure allocated via rb_char_alloc.
  */
-extern void rb_char_free_callback (struct rbtree *, struct rbnode *);
 extern void rb_char_free (struct rbnode_char *);
 
 #endif

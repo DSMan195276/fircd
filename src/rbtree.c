@@ -317,97 +317,128 @@ struct rbnode *rb_search (struct rbtree *tree, const struct rbnode *cmpnode)
         return NULL;
 }
 
-void rb_trav_preorder (struct rbtree *tree, void (*callback) (struct rbtree *, struct rbnode *))
+struct rbnode *rb_trav_first_preorder (struct rbtree *tree, rb_trav_state *state)
 {
-    struct rbnode *current = tree->root, *parent;
-    enum {
-        PARENT = 0,
-        LEFT = 1,
-        RIGHT = 2
-    } from = PARENT;
+    memset(state, 0, sizeof(rb_trav_state));
+    state->current = tree->root;
 
-    while (current != NULL) {
-        if (from == PARENT)
-            (callback) (tree, current);
+    return state->current;
+}
 
-        if (from == PARENT && current->left) {
-            current = current->left;
-            from = PARENT;
-        } else if (from <= LEFT && current->right) {
-            current = current->right;
-            from = PARENT;
+struct rbnode *rb_trav_next_preorder (rb_trav_state *state)
+{
+    rb_trav_state st = *state;
+
+    while (st.current != NULL) {
+        if (st.from == 0 && st.current->left) {
+            st.current = st.current->left;
+            st.from = 0;
+        } else if (st.from <= 1 && st.current->right) {
+            st.current = st.current->right;
+            st.from = 0;
         } else {
-            parent = rb_parent(current);
-            if (parent == NULL)
-                return ;
-
-            if (current == parent->left)
-                from = LEFT;
+            st.parent = rb_parent(st.current);
+            if (st.parent == NULL) {
+                *state = st;
+                return NULL;
+            }
+            if (st.current == st.parent->left)
+                st.from = 1;
             else
-                from = RIGHT;
-            current = parent;
+                st.from = 2;
+            st.current = st.parent;
+        }
+
+        if (st.from == 0) {
+            *state = st;
+            return st.current;
         }
     }
 
+    return NULL;
 }
 
-void rb_trav_inorder (struct rbtree *tree, void (*callback) (struct rbtree *, struct rbnode *))
+struct rbnode *rb_trav_first_inorder (struct rbtree *tree, rb_trav_state *state)
 {
-    struct rbnode *current = tree->root, *parent;
+    memset(state, 0, sizeof(rb_trav_state));
+    state->current = tree->root;
 
-    do {
-        if (current->left != NULL) {
-            current = current->left;
-            continue;
-        }
-
-        (callback) (tree, current);
-
-        if (current->right != NULL) {
-            current = current->right;
-            continue;
-        }
-
-        while ((parent = rb_parent(current)) != NULL) {
-            if (parent->right == current) {
-                current = parent;
-            } else if (parent->left == current && parent->right == NULL) {
-                current = parent;
-                (callback) (tree, current);
-            } else {
-                (callback) (tree, parent);
-                current = parent->right;
-                break;
-            }
-        }
-    } while (rb_parent(current) != NULL);
+    return rb_trav_next_inorder(state);
 }
 
-void rb_trav_postorder (struct rbtree *tree, void (*callback) (struct rbtree *, struct rbnode *))
+struct rbnode *rb_trav_next_inorder(rb_trav_state *state)
 {
-    struct rbnode *current = tree->root, *parent;
-    int from = 0;
+    rb_trav_state st = *state;
+    int first = 0;
 
-    while (current !=  NULL) {
-
-        if (from == 0 && current->left) {
-            current = current->left;
-        } else if (from <= 1 && current->right) {
-            from = 0;
-            current = current->right;
+    while (st.current != NULL) {
+        if (st.from == 0 && st.current->left) {
+            st.current = st.current->left;
+        } else if (st.from == 0) {
+            st.from = 1;
+        } else if (st.from <= 1 && st.current->right) {
+            st.from = 0;
+            st.current = st.current->right;
         } else {
-            parent = rb_parent(current);
-            if (parent != NULL) {
-                if (parent->left == current)
-                    from = 1;
-                else
-                    from = 2;
-            }
+            st.parent = rb_parent(st.current);
+            if (st.parent == NULL)
+                return NULL;
 
-            (callback) (tree, current);
-            current = parent;
+            if (st.current == st.parent->left)
+                st.from = 1;
+            else
+                st.from = 2;
+            st.current = st.parent;
+        }
+
+        if (st.from == 1) {
+            *state = st;
+            return st.current;
         }
     }
+
+    return NULL;
+}
+
+struct rbnode *rb_trav_first_postorder (struct rbtree *tree, rb_trav_state *state)
+{
+    memset(state, 0, sizeof(rb_trav_state));
+    state->current = tree->root;
+
+    return rb_trav_next_postorder(state);
+}
+
+struct rbnode *rb_trav_next_postorder (rb_trav_state *state)
+{
+    rb_trav_state st = *state;
+
+    if (st.parent != NULL)
+        st.current = st.parent;
+    else if (st.from != 0)
+        return NULL;
+
+    while (st.current != NULL) {
+
+        if (st.from == 0 && st.current->left) {
+            st.current = st.current->left;
+        } else if (st.from <= 1 && st.current->right) {
+            st.from = 0;
+            st.current = st.current->right;
+        } else {
+            st.parent = rb_parent(st.current);
+            if (st.parent != NULL) {
+                if (st.parent->left == st.current)
+                    st.from = 1;
+                else
+                    st.from = 2;
+            }
+
+            *state = st;
+            return st.current;
+        }
+    }
+
+    return NULL;
 }
 
 struct rbnode_char *rb_char_alloc (const char *str)
