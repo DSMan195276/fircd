@@ -466,14 +466,6 @@ enum rbcomp rb_char_comp (const struct rbnode *node1, const struct rbnode *node2
         return RB_GT;
 }
 
-void rb_char_free_callback (struct rbtree *tree, struct rbnode *node)
-{
-    struct rbnode_char *cnode = container_of(node, struct rbnode_char, node);
-
-    free(cnode->str);
-    free(cnode);
-}
-
 void rb_char_free (struct rbnode_char *cnode)
 {
     free(cnode->str);
