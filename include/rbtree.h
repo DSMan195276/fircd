@@ -146,6 +146,22 @@ extern struct rbnode *rb_trav_next_inorder   (rb_trav_state *);
 extern struct rbnode *rb_trav_next_postorder (rb_trav_state *);
 
 /*
+ * Macros for each use
+ */
+#define rb_foreach(tree, node, type) \
+    for (rb_trav_state _rb_state; node != NULL;) \
+        for (node = rb_trav_first_##type##order(tree, &_rb_state); \
+             node != NULL; \
+             node = rb_trav_next_##type##order(&_rb_state))
+
+#define rb_foreach_preorder(tree, node) \
+    rb_foreach(tree, node, pre)
+#define rb_foreach_inorder(tree, node) \
+    rb_foreach(tree, node, in)
+#define rb_foreach_postorder(tree, node) \
+    rb_foreach(tree, node, post)
+
+/*
  * This is an example implementation of a rbnode containing simple string data.
  */
 struct rbnode_char {
