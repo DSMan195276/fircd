@@ -16,6 +16,8 @@
 #include "buf.h"
 #include "net_cons.h"
 #include "array.h"
+#include "rbtree.h"
+#include "user.h"
 
 /* 'channel' represents a node on a linked-list of channels */
 struct channel {
@@ -24,7 +26,8 @@ struct channel {
 
     char *name;
 
-    ARRAY(char*, nicks);
+    struct rbtree nicks; /* irc_user tree */
+
     struct buf_fd infd;
     int outfd, onlinefd, topicfd, rawfd, msgsfd;
 };
@@ -42,6 +45,16 @@ extern void channel_write_raw (struct channel *, const char *msg);
 extern void channel_write_out (struct channel *, const char *msg);
 extern void channel_write_msg (struct channel *, const char *user, const char *line);
 extern void channel_write_topic (struct channel *, const char *topic, const char *user);
+
+extern void channel_update_users (struct channel *);
+
+extern void channel_add_user (struct channel *, const char *nick, struct irc_user_flags flags);
+extern struct irc_user *channel_get_user (struct channel *, const char *nick);
+
+/* Returns '1' if the user was deleted */
+extern int  channel_del_user (struct channel *, const char *nick);
+
+extern void channel_change_user(struct channel *, const char *old_user, const char *new_user);
 
 extern void channel_clear (struct channel *);
 extern void channel_clear_all (struct channel *);

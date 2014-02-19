@@ -119,6 +119,79 @@ void channel_write_topic(struct channel *chan, const char *topic, const char *us
     free(msg);
 }
 
+static void channel_write_users(struct channel *chan)
+{
+    struct rbnode *current;
+    struct irc_user *user;
+
+    ftruncate(chan->onlinefd, 0);
+    lseek(chan->onlinefd, 0, SEEK_SET);
+
+    rb_foreach_inorder(&chan->nicks, current) {
+        user = container_of(current, struct irc_user, node);
+        write(chan->onlinefd, user->formatted, strlen(user->formatted));
+        write(chan->onlinefd, "\n", 1);
+    }
+}
+
+void channel_update_users (struct channel *chan)
+{
+    channel_write_users(chan);
+}
+
+void channel_add_user(struct channel *chan, const char *nick, struct irc_user_flags flags)
+{
+    struct irc_user *user;
+
+    user = irc_user_new();
+    user->nick = strdup(nick);
+    user->flags = flags;
+
+    irc_user_format_nick(user);
+
+    rb_insert(&chan->nicks, &user->node);
+    channel_write_users(chan);
+}
+
+struct irc_user *channel_get_user(struct channel *chan, const char *nick)
+{
+    struct irc_user user, *found;
+
+    user.nick = (char *)nick;
+
+    found = container_of(rb_search(&chan->nicks, &user.node), struct irc_user, node);
+
+    return found;
+}
+
+int channel_del_user (struct channel *chan, const char *nick)
+{
+    struct irc_user *user = channel_get_user(chan, nick);
+
+    if (!user)
+        return 0;
+
+    rb_remove(&chan->nicks, &user->node);
+    irc_user_free(user);
+    channel_write_users(chan);
+    return 1;
+}
+
+void channel_change_user(struct channel *chan, const char *old, const char *new)
+{
+    struct irc_user *user = channel_get_user(chan, old);
+
+    rb_remove(&chan->nicks, &user->node);
+
+    free(user->nick);
+    user->nick = strdup(new);
+
+    rb_insert(&chan->nicks, &user->node);
+
+    irc_user_format_nick(user);
+    channel_write_users(chan);
+}
+
 void channel_handle_input(struct channel *chan, fd_set *infd, fd_set *outfd)
 {
     if (FD_ISSET(chan->infd.fd, infd)) {
@@ -151,7 +224,7 @@ void channel_delete_files(struct channel *chan)
 
 void channel_clear(struct channel *current)
 {
-    int i;
+    struct rbnode *current_node;
 
     CLOSE_FD_BUF(current->infd);
     CLOSE_FD(current->outfd);
@@ -165,9 +238,8 @@ void channel_clear(struct channel *current)
 
     free(current->name);
 
-    ARRAY_FOREACH(current->nicks, i)
-        free(current->nicks.arr[i]);
-    ARRAY_FREE(current->nicks);
+    rb_foreach_postorder(&current->nicks, current_node)
+        irc_user_free(container_of(current_node, struct irc_user, node));
 
     free(current);
 }
