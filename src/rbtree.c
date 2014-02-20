@@ -369,7 +369,6 @@ struct rbnode *rb_trav_first_inorder (struct rbtree *tree, rb_trav_state *state)
 struct rbnode *rb_trav_next_inorder(rb_trav_state *state)
 {
     rb_trav_state st = *state;
-    int first = 0;
 
     while (st.current != NULL) {
         if (st.from == 0 && st.current->left) {
