@@ -15,30 +15,19 @@
 #include "channel.h"
 #include "replies.h"
 
-struct reply_handler reply_handler_list[] = {
-    { NULL,      0,             reply_handler_default },
-    { "PING",    0,             reply_handler_ping },
-    { "PRIVMSG", 0,             reply_handler_privmsg },
-    { NULL,      RPL_MOTDSTART, reply_handler_motd },
-    { NULL,      RPL_MOTD,      reply_handler_motd },
-    { NULL,      RPL_TOPIC,     reply_handler_topic },
-    { "TOPIC",   0,             reply_handler_topic },
-    { 0 }
-};
-
-REPLY_HANDLER(default)
+static void r_default(struct network *net, struct irc_reply *rpl)
 {
 
 }
 
-REPLY_HANDLER(ping)
+static void r_ping(struct network *net, struct irc_reply *rpl)
 {
     char *tmp = alloc_sprintf("PONG :%s", rpl->colon);
     irc_send_raw(net, tmp);
     free(tmp);
 }
 
-REPLY_HANDLER(privmsg)
+static void r_privmsg(struct network *net, struct irc_reply *rpl)
 {
     struct channel *chan;
     char *user;
@@ -66,7 +55,7 @@ REPLY_HANDLER(privmsg)
     channel_write_msg(chan, user, rpl->colon);
 }
 
-REPLY_HANDLER(motd)
+static void r_motd(struct network *net, struct irc_reply *rpl)
 {
     if (rpl->code == RPL_MOTDSTART)
         network_write_motd_start(net);
@@ -74,7 +63,7 @@ REPLY_HANDLER(motd)
         network_write_motd_line(net, rpl->colon);
 }
 
-REPLY_HANDLER(topic)
+static void r_topic(struct network *net, struct irc_reply *rpl)
 {
     const char *chan_nam;
     struct channel *chan;
@@ -91,4 +80,15 @@ REPLY_HANDLER(topic)
             channel_write_topic(chan, rpl->colon, rpl->prefix.user);
     }
 }
+
+struct reply_handler reply_handler_list[] = {
+    { NULL,      0,             r_default },
+    { "PING",    0,             r_ping },
+    { "PRIVMSG", 0,             r_privmsg },
+    { NULL,      RPL_MOTDSTART, r_motd },
+    { NULL,      RPL_MOTD,      r_motd },
+    { NULL,      RPL_TOPIC,     r_topic },
+    { "TOPIC",   0,             r_topic },
+    { 0 }
+};
 
