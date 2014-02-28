@@ -4,5 +4,7 @@ compiler:
   - gcc
   - clang
   
+install: libconfuse
+  
 script:
   - make
