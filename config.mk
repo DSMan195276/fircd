@@ -12,7 +12,7 @@ CFLAGS  := -Wall -I'./include' -O2 -std=c99           \
            -DFIRCD_SUBLEVEL=$(SUBLEVEL)               \
            -DFIRCD_PATCH=$(PATCH)                     \
            -DFIRCD_VERSION_N="$(VERSION_N)"
-LDFLAGS := $(LDFLAGS) -lconfuse
+LDFLAGS := -lconfuse
 
 # Install Paths
 PREFIX  := /usr
