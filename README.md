@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/dsman195276/fircd.png?label=ready&title=Ready)](https://waffle.io/dsman195276/fircd)
 fircd
 =====
 
