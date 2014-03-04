@@ -1,4 +1,3 @@
-
 # Program wide settings
 EXE       := fircd
 VERSION   := 0
@@ -7,13 +6,13 @@ PATCH     := 0
 VERSION_N := $(VERSION).$(SUBLEVEL).$(PATCH)
 
 # Compiler settings
-CC      := cc
-CFLAGS  := $(CFLAGS) -Wall -I'./include' -O2 -std=c99 \
+CC      ?= cc
+CFLAGS  := -Wall -I'./include' -O2 -std=c99           \
            -DFIRCD_VERSION=$(VERSION)                 \
            -DFIRCD_SUBLEVEL=$(SUBLEVEL)               \
            -DFIRCD_PATCH=$(PATCH)                     \
            -DFIRCD_VERSION_N="$(VERSION_N)"
-LDFLAGS := $(LDFLAGS) -lconfuse
+LDFLAGS := -lconfuse
 
 # Install Paths
 PREFIX  := /usr
