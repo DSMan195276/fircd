@@ -16,9 +16,11 @@ ifdef FIRCD_DEBUG
 	CFLAGS += -DFIRCD_DEBUG -g
 endif
 
-.PHONY: all install clean doc dist install_$(EXE) install_doc
+.PHONY: all install clean doc dist install_$(EXE) install_doc test
 
 all: $(EXE) doc
+
+include ./test/test.mk
 
 dist: clean
 	$(Q)mkdir -p $(EXE)-$(VERSION_N)
@@ -48,7 +50,7 @@ install_doc: doc
 	$(Q)install -m 444 doc/fircd.1 $(MAN1DIR)
 	@echo " Doc Installation done"
 
-clean:
+clean: clean_tests
 	@echo " RM      $(OBJS)"
 	$(Q)rm -f $(OBJS)
 	@echo " RM      $(EXE)"
@@ -61,6 +63,8 @@ $(EXE): $(OBJS)
 src/%.o: src/%.c
 	@echo " CC      $@"
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+test: run_tests
 
 doc:
 
