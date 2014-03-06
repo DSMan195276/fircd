@@ -9,8 +9,9 @@
 #define INCLUDE_CONFIG_H
 
 #include "global.h"
-#include "network.h"
 #include "array.h"
+
+struct network;
 
 struct config {
     ARRAY(char*, auto_login);

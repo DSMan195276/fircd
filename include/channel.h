@@ -14,6 +14,7 @@
 #include <sys/select.h>
 
 #include "buf.h"
+#include "net_cons.h"
 #include "array.h"
 
 /* 'channel' represents a node on a linked-list of channels */
@@ -29,12 +30,12 @@ struct channel {
 };
 
 extern void channel_init (struct channel *);
-extern void channel_init_select_desc (struct channel *);
+extern void channel_init_select_desc (struct channel *, fd_set *, fd_set *, int *);
 
 extern void channel_setup (struct channel *);
 extern void channel_setup_files (struct channel *);
 
-extern void channel_handle_input (struct channel *);
+extern void channel_handle_input (struct channel *, fd_set *, fd_set *);
 extern void channel_handle_serv_line (struct channel *, const char *line);
 
 extern void channel_write_raw (struct channel *, const char *msg);

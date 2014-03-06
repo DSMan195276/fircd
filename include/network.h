@@ -24,7 +24,10 @@ enum network_login {
     LOGIN_SASL
 };
 
+struct network_con;
+
 struct network {
+    struct network_cons *con;
     struct network *next;
 
     struct channel *head;
@@ -47,10 +50,10 @@ struct network {
     unsigned int close_network :1;
 };
 
-extern void network_init             (struct network *);
-extern void network_init_select_desc (struct network *);
+extern void network_init             (struct network *, struct network_cons *);
+extern void network_init_select_desc (struct network *, fd_set *infd, fd_set *outfd, int *maxfd);
 extern void network_setup_files      (struct network *);
-extern void network_handle_input     (struct network *);
+extern void network_handle_input     (struct network *, fd_set *, fd_set *);
 extern void network_connect          (struct network *);
 extern struct network *network_copy  (struct network *);
 

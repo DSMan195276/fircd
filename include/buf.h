@@ -58,19 +58,6 @@ struct buf_fd {
             close(fd); \
     } while (0)
 
-#define ADD_FD_CUR_STATE(fd) \
-    do { \
-        if ((fd) != -1) \
-            FD_SET((fd), &current_state->infd); \
-        if ((fd) > (current_state->maxfd)) \
-            (current_state->maxfd) = (fd); \
-    } while (0)
-
-#define CLR_FD_CUR_STATE(fd) \
-    do { \
-        FD_CLR((fd), &current_state->infd); \
-    } while (0)
-
 #define ADD_FD_BUF(buf_fd, in, maxfd) \
     do { \
         if ((buf_fd).fd != -1) \

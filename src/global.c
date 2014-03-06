@@ -19,8 +19,6 @@
 #include "config.h"
 #include "buf.h"
 
-struct network_cons *current_state = NULL;
-
 static char *valloc_sprintf (const char *format, va_list lst)
 {
     size_t size = vsnprintf(NULL, 0, format, lst) + 1;
@@ -45,32 +43,5 @@ char *alloc_sprintf (const char *format, ...)
     va_end(lst);
 
     return ret;
-}
-
-static void network_cons_clear(struct network_cons *con)
-{
-    network_clear_all(con->head);
-    config_clear(&(con->conf));
-
-    buf_free(&con->cmdfd);
-
-    unlink("cmd");
-
-    free(con->config_file);
-    free(con->dir);
-}
-
-void current_state_init(void)
-{
-    current_state = malloc(sizeof(struct network_cons));
-    memset(current_state, 0, sizeof(struct network_cons));
-
-    buf_init(&current_state->cmdfd);
-}
-
-void current_state_clear(void)
-{
-    network_cons_clear(current_state);
-    free(current_state);
 }
 

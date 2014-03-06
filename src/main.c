@@ -11,31 +11,34 @@
 #include "debug.h"
 #include "daemon.h"
 #include "arg.h"
+#include "net_cons.h"
 #include "fircd.h"
+
+static struct network_cons state;
 
 int main(int argc, char **argv)
 {
     DEBUG_INIT();
     DEBUG_PRINT("Starting up...");
 
-    current_state_init();
+    network_cons_init(&state);
 
     DEBUG_PRINT("Parsing arguments...");
-    parse_cmd_args(argc, argv);
+    parse_cmd_args(argc, argv, &state);
 
-    if (config_file_parse() == 1)
+    if (network_cons_config_read(&state) == 1)
         return 1;
 
-    if (!current_state->dont_auto_load)
-        setup_auto_load();
+    if (!state.dont_auto_load)
+        network_cons_auto_login(&state);
 
-    if (!current_state->conf.stay_in_forground)
+    if (!state.conf.stay_in_forground)
         daemon_init();
 
-    init_directory();
-    init_networks();
+    network_cons_init_directory(&state);
+    network_cons_connect_networks(&state);
 
-    daemon_main_loop();
+    daemon_main_loop(&state);
 
     /* We shouldn't get here. If we do then just die */
     daemon_kill();

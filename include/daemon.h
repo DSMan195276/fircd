@@ -10,8 +10,10 @@
 
 #include "global.h"
 
+#include "net_cons.h"
+
 extern void daemon_init(void);
 extern void daemon_kill(void);
-extern void daemon_main_loop(void);
+extern void daemon_main_loop(struct network_cons *con);
 
 #endif

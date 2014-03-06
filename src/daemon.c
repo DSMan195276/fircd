@@ -24,9 +24,11 @@
 #include "fircd.h"
 #include "network.h"
 #include "channel.h"
+#include "net_cons.h"
 #include "daemon.h"
 
 static int still_in_parent = 0;
+static struct network_cons *cur_con;
 
 static void sig_int_handler(int sig)
 {
@@ -84,16 +86,20 @@ void daemon_kill(void)
         DEBUG_PRINT("Process closing...");
 
     DEBUG_PRINT("Closing networks...");
-    current_state_clear();
+    network_cons_clear(cur_con);
 
     DEBUG_PRINT("Done.");
     DEBUG_CLOSE();
     exit(0);
 }
 
-void daemon_main_loop(void)
+void daemon_main_loop(struct network_cons *con)
 {
     int ret;
+    int maxfd = 0;
+    fd_set infd, outfd;
+
+    cur_con = con;
 
     signal(SIGILL, sig_int_handler);
     signal(SIGINT, sig_int_handler);
@@ -105,18 +111,18 @@ void daemon_main_loop(void)
     DEBUG_PRINT("Done!");
 
     while (1) {
-        FD_ZERO(&current_state->infd);
-        FD_ZERO(&current_state->outfd);
-        current_state->maxfd = 0;
+        FD_ZERO(&infd);
+        FD_ZERO(&outfd);
+        maxfd = 0;
 
-        set_select_desc();
+        network_cons_set_select_desc(con, &infd, &outfd, &maxfd);
 
-        if ((ret = select(current_state->maxfd + 1,
-                          &current_state->infd,
-                          &current_state->outfd,
+        if ((ret = select(maxfd + 1,
+                          &infd,
+                          &outfd,
                           NULL, NULL))) {
             DEBUG_PRINT("Select Ret: %d", ret);
-            handle_file_check();
+            network_cons_handle_file_check(con, &infd, &outfd);
         }
     }
 }

@@ -21,8 +21,6 @@
 #include "network.h"
 #include "config.h"
 
-static const char default_config_file[] = "~/.fircdrc";
-
 static int login_type_callback(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result);
 
 static cfg_opt_t network_opts[] = {
@@ -73,27 +71,6 @@ static int login_type_callback(cfg_t *cfg, cfg_opt_t *opt, const char *value, vo
     return 0;
 }
 
-/* Returns 0 if file could be opened and parsed, or no file was specified and
- * the default file didn't exist. Returns 1 if the file was specified and it
- * didn't exist. */
-int config_file_parse(void)
-{
-    int no_conf = 0, ret;
-    const char *filename;
-
-    if (current_state->config_file == NULL) {
-        no_conf = 1;
-        filename = default_config_file;
-    } else {
-        filename = current_state->config_file;
-    }
-
-    ret = config_read(&(current_state->conf), filename);
-    if (ret == 2)
-        return !no_conf;
-    else
-        return  ret;
-}
 
 static char *sstrdup(const char *s)
 {
@@ -108,14 +85,11 @@ static void add_network(struct config *conf, cfg_t *network)
     int i;
     struct network *net = malloc(sizeof(struct network));
 
-    network_init(net);
+    network_init(net, NULL);
     net->name = sstrdup(cfg_title(network));
     net->url = sstrdup(cfg_getstr(network, "server"));
     net->portno = cfg_getint(network, "port");
-    if ((int)cfg_getbool(network, "remove-files-on-close") != -1)
-        net->remove_files_on_close = cfg_getbool(network, "remove-files-on-close");
-    else
-        net->remove_files_on_close = current_state->conf.remove_files_on_close;
+    net->remove_files_on_close = (int)cfg_getbool(network,  "remove-files-on-close");
 
     net->nickname = sstrdup(cfg_getstr(network, "nickname"));
     net->realname = sstrdup(cfg_getstr(network, "realname"));
@@ -137,32 +111,22 @@ int config_read(struct config *conf, const char *filename)
 
     cfg = cfg_init(main_opts, CFGF_NONE);
 
-    if (!current_state->no_config) {
-        switch(cfg_parse(cfg, filename)) {
-        case CFG_FILE_ERROR:
-            ret = 2;
-            goto cleanup;
-        case CFG_PARSE_ERROR:
-            printf("Error reading configuration file '%s': %s\n", filename, strerror(errno));
-            ret = 1;
-            goto cleanup;
-        case CFG_SUCCESS:
-            break;
-        }
+    switch(cfg_parse(cfg, filename)) {
+    case CFG_FILE_ERROR:
+        ret = 2;
+        goto cleanup;
+    case CFG_PARSE_ERROR:
+        printf("Error reading configuration file '%s': %s\n", filename, strerror(errno));
+        ret = 1;
+        goto cleanup;
+    case CFG_SUCCESS:
+        break;
     }
 
     if (cfg) {
-        if (current_state->stay_in_forground == 0)
-            conf->stay_in_forground = cfg_getbool(cfg, "stay-in-forground");
-        else
-            conf->stay_in_forground = 1;
-
+        conf->stay_in_forground = cfg_getbool(cfg, "stay-in-forground");
         conf->remove_files_on_close = cfg_getbool(cfg, "remove-files-on-close");
-
-        if (!current_state->dir)
-            conf->root_directory = strdup(cfg_getstr(cfg, "root-directory"));
-        else
-            conf->root_directory = strdup(current_state->dir);
+        conf->root_directory = strdup(cfg_getstr(cfg, "root-directory"));
 
         size = cfg_size(cfg, "network");
         for (i = 0; i < size; i++)

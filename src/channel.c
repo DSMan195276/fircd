@@ -25,6 +25,7 @@
 #include "array.h"
 #include "buf.h"
 #include "irc.h"
+#include "net_cons.h"
 #include "channel.h"
 
 void channel_init(struct channel *chan)
@@ -53,9 +54,13 @@ void channel_setup_files(struct channel *chan)
     chdir("..");
 }
 
-void channel_init_select_desc(struct channel *chan)
+void channel_init_select_desc(struct channel *chan, fd_set *infd, fd_set *outfd, int *maxfd)
 {
-    ADD_FD_CUR_STATE(chan->infd.fd);
+    if (chan->infd.fd != -1) {
+        FD_SET(chan->infd.fd, infd);
+        if (chan->infd.fd > *maxfd)
+            *maxfd = chan->infd.fd;
+    }
 }
 
 void channel_write_raw(struct channel *chan, const char *msg)
@@ -114,9 +119,9 @@ void channel_write_topic(struct channel *chan, const char *topic, const char *us
     free(msg);
 }
 
-void channel_handle_input(struct channel *chan)
+void channel_handle_input(struct channel *chan, fd_set *infd, fd_set *outfd)
 {
-    if (FD_ISSET(chan->infd.fd, &current_state->infd)) {
+    if (FD_ISSET(chan->infd.fd, infd)) {
         buf_handle_input(&(chan->infd));
         while (chan->infd.has_line > 0) {
             char *line = buf_read_line(&(chan->infd));

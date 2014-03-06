@@ -15,6 +15,7 @@
 
 #include "debug.h"
 #include "fircd.h"
+#include "net_cons.h"
 #include "arg.h"
 
 /*
@@ -77,7 +78,7 @@ static const char version_text[] =
 
 /* This code actually implements how to handle each operation. It's a bit bulky
  * but very simple. */
-void parse_cmd_args (int argc, char **argv)
+void parse_cmd_args (int argc, char **argv, struct network_cons *con)
 {
     int opt;
     int long_index = 0;
@@ -96,21 +97,21 @@ void parse_cmd_args (int argc, char **argv)
             exit(0);
             break;
         case OPT_NO_CFG:
-            current_state->no_config = 1;
+            con->no_config = 1;
             break;
         case OPT_FOR:
-            current_state->stay_in_forground = 1;
+            con->stay_in_forground = 1;
             break;
         case OPT_CFG:
-            current_state->config_file = strdup(optarg);
+            con->config_file = strdup(optarg);
             break;
         case OPT_DONT:
-            current_state->dont_auto_load = 1;
+            con->dont_auto_load = 1;
             break;
         case OPT_NET:
-            size = ARRAY_SIZE(current_state->conf.auto_login);
-            ARRAY_RESIZE(current_state->conf.auto_login, size + 1);
-            current_state->conf.auto_login.arr[size] = strdup(optarg);
+            size = ARRAY_SIZE(con->conf.auto_login);
+            ARRAY_RESIZE(con->conf.auto_login, size + 1);
+            con->conf.auto_login.arr[size] = strdup(optarg);
             DEBUG_PRINT("Auto-starting network %s", optarg);
             break;
         default:

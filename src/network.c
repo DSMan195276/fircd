@@ -26,11 +26,14 @@
 #include "replies.h"
 #include "network.h"
 
-void network_init(struct network *net)
+void network_init(struct network *net, struct network_cons *con)
 {
     memset(net, 0, sizeof(struct network));
     net->portno = DEFAULT_PORT;
-    net->remove_files_on_close = current_state->conf.remove_files_on_close;
+    if (con) {
+        net->con = con;
+        net->remove_files_on_close = con->conf.remove_files_on_close;
+    }
 
     buf_init(&net->sock);
     buf_init(&net->cmdfd);
@@ -81,15 +84,24 @@ void network_delete_files (struct network *net)
     rmdir(net->name);
 }
 
-void network_init_select_desc(struct network *net)
+void network_init_select_desc(struct network *net, fd_set *infd, fd_set *outfd, int *maxfd)
 {
     struct channel *tmp;
 
-    ADD_FD_CUR_STATE(net->sock.fd);
-    ADD_FD_CUR_STATE(net->cmdfd.fd);
+    if (net->sock.fd != -1) {
+        FD_SET(net->sock.fd, infd);
+        if (net->sock.fd > *maxfd)
+            *maxfd = net->sock.fd;
+    }
+
+    if (net->cmdfd.fd != -1) {
+        FD_SET(net->cmdfd.fd, infd);
+        if (net->cmdfd.fd > *maxfd)
+            *maxfd = net->cmdfd.fd;
+    }
 
     for (tmp = net->head; tmp != NULL; tmp = tmp->next)
-        channel_init_select_desc(tmp);
+        channel_init_select_desc(tmp, infd, outfd, maxfd);
 }
 
 static void handle_cmd_line (struct network *net, char *line)
@@ -142,10 +154,10 @@ cleanup:
     irc_reply_free(rpl);
 }
 
-void network_handle_input (struct network *net)
+void network_handle_input (struct network *net, fd_set *infd, fd_set *outfd)
 {
     struct channel *tmp;
-    if (FD_ISSET(net->cmdfd.fd, &current_state->infd)) {
+    if (FD_ISSET(net->cmdfd.fd, infd)) {
         buf_handle_input(&(net->cmdfd));
         while (net->cmdfd.has_line > 0) {
             char *line = buf_read_line(&(net->cmdfd));
@@ -154,7 +166,7 @@ void network_handle_input (struct network *net)
         }
     }
 
-    if (FD_ISSET(net->sock.fd, &current_state->infd)) {
+    if (FD_ISSET(net->sock.fd, infd)) {
         buf_handle_input(&(net->sock));
         if (net->sock.closed_gracefully) {
             DEBUG_PRINT("Connection to %s was closed", net->name);
@@ -169,7 +181,7 @@ void network_handle_input (struct network *net)
     }
 
     for (tmp = net->head; tmp != NULL; tmp = tmp->next)
-        channel_handle_input(tmp);
+        channel_handle_input(tmp, infd, outfd);
 }
 
 void network_connect(struct network *net)
@@ -197,7 +209,7 @@ struct network *network_copy (struct network *net)
     struct channel *tmp;
     struct network *newnet = malloc(sizeof(struct network));
 
-    network_init(newnet);
+    network_init(newnet, NULL);
 
     if (net->name)
         newnet->name = strdup(net->name);
