@@ -5,6 +5,8 @@ compiler:
   
 install: 
   - sudo apt-get install libconfuse-dev
+  - sudo apt-get install valgrind
   
 script:
   - make
+  - make test
