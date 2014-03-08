@@ -250,7 +250,7 @@ void channel_user_join(struct channel *chan, const struct irc_user *user_cpy)
     char *msg;
     channel_user_online(chan, user_cpy);
 
-    msg = alloc_sprintf("%s has joined\n", user_cpy->nick);
+    msg = alloc_sprintf("join > %s\n", user_cpy->nick);
     channel_write_out(chan, msg);
     free(msg);
 
@@ -292,7 +292,7 @@ void channel_user_part (struct channel *chan, const char *nick)
 
     channel_write_users(chan);
 
-    msg = alloc_sprintf("%s has parted\n", nick);
+    msg = alloc_sprintf("part > %s\n", nick);
     channel_write_out(chan, msg);
     free(msg);
 
@@ -311,7 +311,7 @@ void channel_user_quit (struct channel *chan, const char *nick)
 
     channel_write_users(chan);
 
-    msg = alloc_sprintf("%s has quit\n", nick);
+    msg = alloc_sprintf("quit < %s\n", nick);
     channel_write_out(chan, msg);
     free(msg);
 
