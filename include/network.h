@@ -24,7 +24,7 @@ enum network_login {
     LOGIN_SASL
 };
 
-struct network_con;
+struct network_cons;
 
 struct network {
     struct network_cons *con;
