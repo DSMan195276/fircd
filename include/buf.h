@@ -45,20 +45,15 @@ struct buf_fd {
     unsigned int closed_gracefully :1;
 };
 
-#define CLOSE_FD_BUF(buf_fd) \
-    do { \
-        if ((buf_fd).fd != -1) \
-            close((buf_fd).fd); \
-        buf_free(&(buf_fd)); \
-    } while (0)
-
 #define CLOSE_FD(fd) \
     do { \
-        if ((fd) != -1) \
+        if ((fd) >= 0) {\
             close(fd); \
+            fd = -1; \
+        } \
     } while (0)
 
-#define ADD_FD_BUF(buf_fd, in, maxfd) \
+#define ADD_FD_BUF_TO_SET(buf_fd, in, maxfd) \
     do { \
         if ((buf_fd).fd != -1) \
             FD_SET((buf_fd).fd, in); \
@@ -66,13 +61,8 @@ struct buf_fd {
             (maxfd) = (buf_fd).fd; \
     } while (0)
 
-#define OPEN_FILE(ptr, name) (ptr)->name##fd = open(#name , O_WRONLY | O_CREAT | O_APPEND | O_NONBLOCK, 0750)
-
-#define OPEN_FIFO(ptr, name) \
-    do { \
-        mkfifo(#name, 0772); \
-        (ptr)->name ## fd.fd = open(#name , O_RDWR | O_NONBLOCK, 0); \
-    } while (0)
+#define BUF_FILE_OPEN_FLAGS (O_WRONLY | O_CREAT | O_APPEND | O_NONBLOCK)
+#define BUF_FIFO_OPEN_FLAGS (O_RDWR | O_NONBLOCK)
 
 extern void buf_init(struct buf_fd *);
 

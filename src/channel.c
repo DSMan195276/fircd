@@ -44,13 +44,14 @@ void channel_setup_files(struct channel *chan)
     mkdir(chan->name, 0775);
     chdir(chan->name);
 
-    OPEN_FIFO(chan, in);
+    mkfifo("in", 0772);
+    chan->infd.fd = open("in", BUF_FIFO_OPEN_FLAGS, 0);
 
-    OPEN_FILE(chan, out);
-    OPEN_FILE(chan, online);
-    OPEN_FILE(chan, topic);
-    OPEN_FILE(chan, raw);
-    OPEN_FILE(chan, msgs);
+    chan->outfd    = open("out",    BUF_FILE_OPEN_FLAGS, 0750);
+    chan->onlinefd = open("online", BUF_FILE_OPEN_FLAGS, 0750);
+    chan->topicfd  = open("topic",  BUF_FILE_OPEN_FLAGS, 0750);
+    chan->rawfd    = open("raw",    BUF_FILE_OPEN_FLAGS, 0750);
+    chan->msgsfd   = open("msgs",   BUF_FILE_OPEN_FLAGS, 0750);
 
     chdir("..");
     chdir("..");
@@ -323,7 +324,8 @@ void channel_clear(struct channel *current)
 {
     struct irc_user *user, *tmp;
 
-    CLOSE_FD_BUF(current->infd);
+    CLOSE_FD(current->infd.fd);
+    buf_free(&current->infd);
     CLOSE_FD(current->outfd);
     CLOSE_FD(current->onlinefd);
     CLOSE_FD(current->topicfd);

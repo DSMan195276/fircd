@@ -54,13 +54,14 @@ void network_setup_files (struct network *net)
     mkdir(net->name, 0775);
     chdir(net->name);
 
-    OPEN_FIFO(net, cmd);
+    mkfifo("cmd", 0772);
+    net->cmdfd.fd = open("cmd", BUF_FIFO_OPEN_FLAGS, 0);
 
-    OPEN_FILE(net, raw);
-    OPEN_FILE(net, joined);
-    OPEN_FILE(net, motd);
-    OPEN_FILE(net, realname);
-    OPEN_FILE(net, nickname);
+    net->rawfd      = open("raw",      BUF_FILE_OPEN_FLAGS, 0750);
+    net->joinedfd   = open("joined",   BUF_FILE_OPEN_FLAGS, 0750);
+    net->motdfd     = open("motd",     BUF_FILE_OPEN_FLAGS, 0750);
+    net->realnamefd = open("realname", BUF_FILE_OPEN_FLAGS, 0750);
+    net->nicknamefd = open("nickname", BUF_FILE_OPEN_FLAGS, 0750);
 
     chdir("..");
 
@@ -316,8 +317,12 @@ void network_clear (struct network *current)
 
     channel_clear_all(current->head);
 
-    CLOSE_FD_BUF(current->sock);
-    CLOSE_FD_BUF(current->cmdfd);
+    CLOSE_FD(current->sock.fd);
+    buf_free(&current->sock);
+
+    CLOSE_FD(current->cmdfd.fd);
+    buf_free(&current->cmdfd);
+
     CLOSE_FD(current->joinedfd);
     CLOSE_FD(current->motdfd);
     CLOSE_FD(current->rawfd);
