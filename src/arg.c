@@ -14,7 +14,6 @@
 #include <getopt.h>
 
 #include "debug.h"
-#include "fircd.h"
 #include "net_cons.h"
 #include "arg.h"
 

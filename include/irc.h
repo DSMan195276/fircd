@@ -12,7 +12,6 @@
 
 #include <stdarg.h>
 
-#include "fircd.h"
 #include "channel.h"
 #include "network.h"
 #include "array.h"

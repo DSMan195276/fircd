@@ -15,7 +15,6 @@
 #include <stdarg.h>
 
 #include "debug.h"
-#include "fircd.h"
 #include "config.h"
 #include "buf.h"
 

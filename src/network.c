@@ -21,7 +21,6 @@
 #include "debug.h"
 #include "buf.h"
 #include "channel.h"
-#include "fircd.h"
 #include "irc.h"
 #include "replies.h"
 #include "network.h"

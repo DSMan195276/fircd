@@ -21,7 +21,6 @@
 #include <sys/stat.h>
 
 #include "debug.h"
-#include "fircd.h"
 #include "array.h"
 #include "buf.h"
 #include "irc.h"

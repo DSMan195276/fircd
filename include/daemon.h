@@ -12,8 +12,7 @@
 
 #include "net_cons.h"
 
-extern void daemon_init(void);
-extern void daemon_kill(void);
-extern void daemon_main_loop(struct network_cons *con);
+extern void daemon_init(struct network_cons *con);
+extern void daemon_kill(struct network_cons *con);
 
 #endif
