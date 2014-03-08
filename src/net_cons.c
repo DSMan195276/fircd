@@ -46,7 +46,7 @@ static void apply_net_override_settings(struct network_cons *con)
 {
     struct network *net;
     for (net = con->head; net != NULL; net = net->next) {
-        if (net->remove_files_on_close == -1)
+        if (net->remove_files_on_close == 2)
             net->remove_files_on_close = con->conf.remove_files_on_close;
     }
 

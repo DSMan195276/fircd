@@ -26,7 +26,7 @@ static int login_type_callback(cfg_t *cfg, cfg_opt_t *opt, const char *value, vo
 static cfg_opt_t network_opts[] = {
     CFG_STR      ("server",                NULL,       CFGF_NODEFAULT),
     CFG_INT      ("port",                  6667,       CFGF_NONE),
-    CFG_BOOL     ("remove-files-on-close",   -1,  CFGF_NONE),
+    CFG_BOOL     ("remove-files-on-close",    2,  CFGF_NONE),
     CFG_STR      ("nickname",              NULL,       CFGF_NODEFAULT),
     CFG_STR      ("realname",              NULL,       CFGF_NONE),
     CFG_STR      ("password",              NULL,       CFGF_NONE),
