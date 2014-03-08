@@ -16,9 +16,9 @@ echo "--------------------"
 echo " FINISHED TESTS"
 
 if [ "$FAILURE" != "0" ]; then
-    echo -e "Result: \e[31m FAILED: $FAILURE\e[0m"
+    echo -e "Result:\e[31m FAILED: $FAILURE\e[0m"
 else
-    echo -e "Result: \e[32m PASSED\e[0m"
+    echo -e "Result:\e[32m PASSED\e[0m"
 fi
 
 exit $FAILURE
