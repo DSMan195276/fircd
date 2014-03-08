@@ -16,8 +16,6 @@ struct irc_user_flags {
 };
 
 struct irc_user {
-    struct irc_user *next;
-
     char *nick;
     char *formatted;
 
@@ -26,14 +24,12 @@ struct irc_user {
 
 #define IS_USER_CHAR(ch) ((ch) == '@' || (ch) == '!' || (ch) == '&')
 
-void irc_user_init(struct irc_user *);
-void irc_user_clear(struct irc_user *);
+extern void irc_user_init(struct irc_user *);
+extern void irc_user_clear(struct irc_user *);
 
-void irc_user_format_nick(struct irc_user *);
-void irc_user_conv(char *name, char **new_name, struct irc_user_flags *);
+extern void irc_user_cpy(struct irc_user *dest, const struct irc_user *src);
 
-struct irc_user *irc_user_new (void);
-void             irc_user_free(struct irc_user*);
-
+extern void irc_user_format_nick(struct irc_user *);
+extern void irc_user_conv(struct irc_user *, char *name);
 
 #endif

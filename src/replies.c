@@ -39,7 +39,7 @@ static void r_privmsg(struct network *net, struct irc_reply *rpl)
     for (chan = net->head; chan != NULL; chan = chan->next) {
         DEBUG_PRINT("Checking channel: %s", chan->name);
         if (strcmp(rpl->lines.arr[0], chan->name) == 0) {
-            channel_write_msg (chan, user, rpl->colon);
+            channel_new_message(chan, user, rpl->colon);
             return;
         }
     }
@@ -50,9 +50,9 @@ static void r_privmsg(struct network *net, struct irc_reply *rpl)
     else
         chan = network_add_channel(net, rpl->lines.arr[0]);
 
-    channel_setup_files(chan);
+    channel_create_files(chan);
 
-    channel_write_msg(chan, user, rpl->colon);
+    channel_new_message(chan, user, rpl->colon);
 }
 
 static void r_motd(struct network *net, struct irc_reply *rpl)
@@ -77,16 +77,25 @@ static void r_topic(struct network *net, struct irc_reply *rpl)
     for (chan = net->head; chan != NULL; chan = chan->next) {
         DEBUG_PRINT("Checking channel: %s", chan->name);
         if (strcmp(chan_nam, chan->name) == 0)
-            channel_write_topic(chan, rpl->colon, rpl->prefix.user);
+            channel_new_topic(chan, rpl->colon, rpl->prefix.user);
     }
 }
 
 static void r_join(struct network *net, struct irc_reply *rpl)
 {
     struct channel *chan;
+    struct irc_user user;
 
     chan = network_find_channel(net, rpl->lines.arr[0]);
-    channel_join_user(chan, rpl->prefix.user, (struct irc_user_flags) { 0 } );
+
+    irc_user_init(&user);
+
+    user.nick = strdup(rpl->prefix.user);
+    user.flags = (struct irc_user_flags){ 0 };
+
+    channel_user_join(chan, &user);
+
+    irc_user_clear(&user);
 }
 
 static void r_part(struct network *net, struct irc_reply *rpl)
@@ -96,7 +105,7 @@ static void r_part(struct network *net, struct irc_reply *rpl)
     DEBUG_PRINT("In Part!");
 
     chan = network_find_channel(net, rpl->lines.arr[0]);
-    channel_del_user(chan, rpl->prefix.user);
+    channel_user_part(chan, rpl->prefix.user);
 }
 
 static void r_quit(struct network *net, struct irc_reply *rpl)
@@ -104,13 +113,13 @@ static void r_quit(struct network *net, struct irc_reply *rpl)
     struct channel *chan;
 
     for (chan = net->head; chan != NULL; chan = chan->next)
-        channel_quit_user(chan, rpl->prefix.user);
+        channel_user_quit(chan, rpl->prefix.user);
 }
 
 static void r_names(struct network *net, struct irc_reply *rpl)
 {
     struct channel *chan;
-    struct irc_user_flags flags;
+    struct irc_user user;
     int name_count = 0, i, flag = 1;
     char **names = NULL;
     char *last, *cur = rpl->colon;
@@ -133,10 +142,12 @@ static void r_names(struct network *net, struct irc_reply *rpl)
         }
     }
 
+    irc_user_init(&user);
     for (i = 0; i < name_count; i++) {
-        irc_user_conv(names[i], &cur, &flags);
-        channel_add_user(chan, cur, flags);
+        irc_user_conv(&user, names[i]);
+        channel_user_online(chan, &user);
     }
+    irc_user_clear(&user);
 
     free(names);
 }

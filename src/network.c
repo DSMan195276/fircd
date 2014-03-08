@@ -63,14 +63,15 @@ void network_setup_files (struct network *net)
     net->realnamefd = open("realname", BUF_FILE_OPEN_FLAGS, 0750);
     net->nicknamefd = open("nickname", BUF_FILE_OPEN_FLAGS, 0750);
 
-    chdir("..");
-
     for (tmp = net->head; tmp != NULL; tmp = tmp->next)
-        channel_setup_files(tmp);
+        channel_create_files(tmp);
+
+    chdir("..");
 }
 
 void network_delete_files (struct network *net)
 {
+    struct channel *tmp;
     DEBUG_PRINT("Removing files...");
     chdir(net->name);
 
@@ -80,6 +81,9 @@ void network_delete_files (struct network *net)
     unlink("motd");
     unlink("realname");
     unlink("nickname");
+
+    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+        channel_remove_files(tmp);
 
     chdir("..");
     rmdir(net->name);
@@ -102,7 +106,7 @@ void network_init_select_desc(struct network *net, fd_set *infd, fd_set *outfd, 
     }
 
     for (tmp = net->head; tmp != NULL; tmp = tmp->next)
-        channel_init_select_desc(tmp, infd, outfd, maxfd);
+        channel_reg_select(tmp, infd, outfd, maxfd);
 }
 
 static void handle_cmd_line (struct network *net, char *line)
@@ -315,8 +319,6 @@ void network_clear (struct network *current)
 {
     int i;
 
-    channel_clear_all(current->head);
-
     CLOSE_FD(current->sock.fd);
     buf_free(&current->sock);
 
@@ -341,6 +343,8 @@ void network_clear (struct network *current)
     ARRAY_FOREACH(current->joined, i)
         free(current->joined.arr[i]);
     ARRAY_FREE(current->joined);
+
+    channel_clear_all(current->head);
 }
 
 void network_clear_all(struct network *net)
