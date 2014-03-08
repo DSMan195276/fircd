@@ -26,6 +26,8 @@
 #include "buf.h"
 #include "irc.h"
 #include "net_cons.h"
+#include "rbtree.h"
+#include "user.h"
 #include "channel.h"
 
 void channel_init(struct channel *chan)
@@ -121,14 +123,12 @@ void channel_write_topic(struct channel *chan, const char *topic, const char *us
 
 static void channel_write_users(struct channel *chan)
 {
-    struct rbnode *current;
     struct irc_user *user;
 
     ftruncate(chan->onlinefd, 0);
     lseek(chan->onlinefd, 0, SEEK_SET);
 
-    rb_foreach_inorder(&chan->nicks, current) {
-        user = container_of(current, struct irc_user, node);
+    for (user = chan->first_user; user != NULL; user = user->next) {
         write(chan->onlinefd, user->formatted, strlen(user->formatted));
         write(chan->onlinefd, "\n", 1);
     }
@@ -139,9 +139,23 @@ void channel_update_users (struct channel *chan)
     channel_write_users(chan);
 }
 
+void channel_join_user(struct channel *chan, const char *nick, struct irc_user_flags flags)
+{
+    char *msg;
+    channel_add_user(chan, nick, flags);
+
+    msg = alloc_sprintf("%s has joined\n", nick);
+    channel_write_out(chan, msg);
+    free(msg);
+
+    msg = alloc_sprintf("JOIN %s\n", nick);
+    channel_write_raw(chan, msg);
+    free(msg);
+}
+
 void channel_add_user(struct channel *chan, const char *nick, struct irc_user_flags flags)
 {
-    struct irc_user *user;
+    struct irc_user *user, **current;
 
     user = irc_user_new();
     user->nick = strdup(nick);
@@ -149,46 +163,129 @@ void channel_add_user(struct channel *chan, const char *nick, struct irc_user_fl
 
     irc_user_format_nick(user);
 
-    rb_insert(&chan->nicks, &user->node);
+    for (current = &chan->first_user; *current != NULL; current = &((*current)->next)) {
+        int cmp = strcmp((*current)->nick, user->nick);
+        if (cmp < 0) {
+            break;
+        } else if (cmp == 0) {
+            irc_user_free(user);
+            return ;
+        }
+    }
+
+    user->next = *current;
+    *current = user;
+
     channel_write_users(chan);
 }
 
 struct irc_user *channel_get_user(struct channel *chan, const char *nick)
 {
-    struct irc_user user, *found;
+    struct irc_user *found;
 
-    user.nick = (char *)nick;
+    for (found = chan->first_user; found != NULL; found = found->next) {
+        int cmp = strcmp(found->nick, nick);
+        if (cmp == 0)
+            return found;
+        else if (cmp < 0)
+            return NULL;
+    }
 
-    found = container_of(rb_search(&chan->nicks, &user.node), struct irc_user, node);
-
-    return found;
+    return NULL;
 }
 
 int channel_del_user (struct channel *chan, const char *nick)
 {
-    struct irc_user *user = channel_get_user(chan, nick);
+    struct irc_user **user, *found;
+    char *msg;
 
-    if (!user)
+    for (user = &chan->first_user; *user != NULL; user = &((*user)->next)) {
+        int cmp = strcmp((*user)->nick, nick);
+        if (cmp == 0)
+            break;
+        else if (cmp < 0)
+            return 0;
+    }
+
+    found = *user;
+
+    if (!found)
         return 0;
 
-    rb_remove(&chan->nicks, &user->node);
-    irc_user_free(user);
+    *user = (*user)->next;
+
+    irc_user_free(found);
     channel_write_users(chan);
+
+    msg = alloc_sprintf("%s has parted\n", nick);
+    channel_write_out(chan, msg);
+    free(msg);
+
+    msg = alloc_sprintf("PART %s\n", nick);
+    channel_write_raw(chan, msg);
+    free(msg);
     return 1;
+}
+
+void channel_quit_user (struct channel *chan, const char *nick)
+{
+    struct irc_user **user, *found;
+    char *msg;
+
+    for (user = &chan->first_user; *user != NULL; user = &((*user)->next)) {
+        int cmp = strcmp((*user)->nick, nick);
+        if (cmp == 0)
+            break;
+        else if (cmp < 0)
+            return ;
+    }
+
+    found = *user;
+
+    if (!found)
+        return ;
+
+    *user = (*user)->next;
+
+    irc_user_free(found);
+    channel_write_users(chan);
+
+    msg = alloc_sprintf("%s has quit\n", nick);
+    channel_write_out(chan, msg);
+    free(msg);
+
+    msg = alloc_sprintf("QUIT %s\n", nick);
+    channel_write_raw(chan, msg);
+    free(msg);
+    return ;
 }
 
 void channel_change_user(struct channel *chan, const char *old, const char *new)
 {
-    struct irc_user *user = channel_get_user(chan, old);
+    struct irc_user **user, *found;
 
-    rb_remove(&chan->nicks, &user->node);
+    for (user = &chan->first_user; *user != NULL; user = &((*user)->next)) {
+        int cmp = strcmp((*user)->nick, old);
+        if (cmp == 0)
+            break;
+        else if (cmp < 0)
+            return;
+    }
 
-    free(user->nick);
-    user->nick = strdup(new);
+    found = *user;
+    *user = (*user)->next;
 
-    rb_insert(&chan->nicks, &user->node);
+    free(found->nick);
+    found->nick = strdup(new);
 
-    irc_user_format_nick(user);
+    for (user = &chan->first_user; *user != NULL; user = &((*user)->next))
+        if (strcmp((*user)->nick, new) <= 0)
+            break;
+
+    found->next = (*user)->next;
+    *user = found;
+
+    irc_user_format_nick(found);
     channel_write_users(chan);
 }
 
@@ -224,7 +321,7 @@ void channel_delete_files(struct channel *chan)
 
 void channel_clear(struct channel *current)
 {
-    struct rbnode *current_node;
+    struct irc_user *user, *tmp;
 
     CLOSE_FD_BUF(current->infd);
     CLOSE_FD(current->outfd);
@@ -238,8 +335,10 @@ void channel_clear(struct channel *current)
 
     free(current->name);
 
-    rb_foreach_postorder(&current->nicks, current_node)
-        irc_user_free(container_of(current_node, struct irc_user, node));
+    for (user = current->first_user; user != NULL; user = tmp) {
+        tmp = user->next;
+        irc_user_free(user);
+    }
 
     free(current);
 }

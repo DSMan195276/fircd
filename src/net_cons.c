@@ -123,12 +123,11 @@ void network_cons_set_select_desc (struct network_cons *con, fd_set *infd, fd_se
 
 static void handle_networks(struct network_cons *con)
 {
-    struct network **tmp;
-    for (tmp = &con->head; *tmp != NULL; tmp = &(*tmp)->next) {
-        if ((*tmp)->close_network) {
-            (*tmp) = (*tmp)->next;
-            network_clear(*tmp);
-        }
+    struct network *net, *tmp;
+    for (net = con->head; net != NULL; net = tmp) {
+        tmp = net->next;
+        if (net->close_network)
+            network_clear(net);
     }
 }
 
@@ -147,11 +146,6 @@ void network_cons_handle_file_check(struct network_cons *con, fd_set *infd, fd_s
     for (tmp = con->head; tmp != NULL; tmp = tmp->next)
         network_handle_input(tmp, infd, outfd);
 
-    /* ************************************************************************************
-     * WHY IS THIS HERE?!?!?!?!!?!?!?!!?!?
-     *    |
-     *    V
-     */
     handle_networks(con);
 }
 

@@ -58,6 +58,7 @@ extern void network_connect          (struct network *);
 extern struct network *network_copy  (struct network *);
 
 extern struct channel *network_add_channel (struct network *, const char *channel);
+extern struct channel *network_find_channel (struct network *, const char *channel);
 
 extern void network_quit      (struct network *);
 extern void network_clear     (struct network *);

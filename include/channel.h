@@ -26,7 +26,7 @@ struct channel {
 
     char *name;
 
-    struct rbtree nicks; /* irc_user tree */
+    struct irc_user *first_user;
 
     struct buf_fd infd;
     int outfd, onlinefd, topicfd, rawfd, msgsfd;
@@ -48,11 +48,13 @@ extern void channel_write_topic (struct channel *, const char *topic, const char
 
 extern void channel_update_users (struct channel *);
 
+extern void channel_join_user (struct channel *, const char *nick, struct irc_user_flags flags);
 extern void channel_add_user (struct channel *, const char *nick, struct irc_user_flags flags);
 extern struct irc_user *channel_get_user (struct channel *, const char *nick);
 
 /* Returns '1' if the user was deleted */
 extern int  channel_del_user (struct channel *, const char *nick);
+extern void channel_quit_user (struct channel *, const char *nick);
 
 extern void channel_change_user(struct channel *, const char *old_user, const char *new_user);
 

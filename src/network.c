@@ -136,11 +136,13 @@ static void handle_irc_line (struct network *net, char *line)
     for (hand = reply_handler_list; hand->handler != NULL; hand++) {
         if (hand->cmd && rpl->cmd) {
             if (strcmp(hand->cmd, rpl->cmd) == 0) {
+                DEBUG_PRINT("Handler: %p", hand->handler);
                 (hand->handler) (net, rpl);
                 goto cleanup;
             }
         } else if (hand->code > 0) {
             if (hand->code == rpl->code) {
+                DEBUG_PRINT("Handler: %p", hand->handler);
                 (hand->handler) (net, rpl);
                 goto cleanup;
             }
@@ -246,6 +248,17 @@ struct channel *network_add_channel (struct network *net, const char *channel)
     net->head  = tmp_chan;
 
     return tmp_chan;
+}
+
+struct channel *network_find_channel (struct network *net, const char *channel)
+{
+    struct channel *chan;
+
+    for (chan = net->head; chan != NULL; chan = chan->next)
+        if (strcmp(chan->name, channel) == 0)
+            return chan;
+
+    return NULL;
 }
 
 void network_write_raw (struct network *net, const char *text)

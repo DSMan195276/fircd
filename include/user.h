@@ -16,7 +16,7 @@ struct irc_user_flags {
 };
 
 struct irc_user {
-    struct rbnode node;
+    struct irc_user *next;
 
     char *nick;
     char *formatted;
@@ -24,10 +24,13 @@ struct irc_user {
     struct irc_user_flags flags;
 };
 
+#define IS_USER_CHAR(ch) ((ch) == '@' || (ch) == '!' || (ch) == '&')
+
 void irc_user_init(struct irc_user *);
 void irc_user_clear(struct irc_user *);
 
 void irc_user_format_nick(struct irc_user *);
+void irc_user_conv(char *name, char **new_name, struct irc_user_flags *);
 
 struct irc_user *irc_user_new (void);
 void             irc_user_free(struct irc_user*);

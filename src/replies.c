@@ -81,6 +81,66 @@ static void r_topic(struct network *net, struct irc_reply *rpl)
     }
 }
 
+static void r_join(struct network *net, struct irc_reply *rpl)
+{
+    struct channel *chan;
+
+    chan = network_find_channel(net, rpl->lines.arr[0]);
+    channel_join_user(chan, rpl->prefix.user, (struct irc_user_flags) { 0 } );
+}
+
+static void r_part(struct network *net, struct irc_reply *rpl)
+{
+    struct channel *chan;
+
+    DEBUG_PRINT("In Part!");
+
+    chan = network_find_channel(net, rpl->lines.arr[0]);
+    channel_del_user(chan, rpl->prefix.user);
+}
+
+static void r_quit(struct network *net, struct irc_reply *rpl)
+{
+    struct channel *chan;
+
+    for (chan = net->head; chan != NULL; chan = chan->next)
+        channel_quit_user(chan, rpl->prefix.user);
+}
+
+static void r_names(struct network *net, struct irc_reply *rpl)
+{
+    struct channel *chan;
+    struct irc_user_flags flags;
+    int name_count = 0, i, flag = 1;
+    char **names = NULL;
+    char *last, *cur = rpl->colon;
+
+    chan = network_find_channel(net, rpl->lines.arr[2]);
+
+    last = cur;
+    for (; flag; cur++) {
+        if (*cur == '\0' || *cur == ' ') {
+            if (*cur == ' ')
+                *cur = '\0';
+            else
+                flag = 0;
+
+            name_count++;
+            names = realloc(names, name_count * (sizeof(*names)));
+            names[name_count-1] = last;
+
+            last = cur + 1;
+        }
+    }
+
+    for (i = 0; i < name_count; i++) {
+        irc_user_conv(names[i], &cur, &flags);
+        channel_add_user(chan, cur, flags);
+    }
+
+    free(names);
+}
+
 struct reply_handler reply_handler_list[] = {
     { NULL,      0,             r_default },
     { "PING",    0,             r_ping },
@@ -88,7 +148,11 @@ struct reply_handler reply_handler_list[] = {
     { NULL,      RPL_MOTDSTART, r_motd },
     { NULL,      RPL_MOTD,      r_motd },
     { NULL,      RPL_TOPIC,     r_topic },
+    { NULL,      RPL_NAMREPLY,  r_names },
     { "TOPIC",   0,             r_topic },
+    { "JOIN",    0,             r_join },
+    { "PART",    0,             r_part },
+    { "QUIT",    0,             r_quit },
     { 0 }
 };
 

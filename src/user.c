@@ -8,6 +8,7 @@
 #include "global.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "user.h"
 
@@ -26,6 +27,15 @@ void irc_user_format_nick(struct irc_user *user)
 {
     free(user->formatted);
     user->formatted = strdup(user->nick);
+}
+
+void irc_user_conv(char *name, char **new_name, struct irc_user_flags *flags)
+{
+    if (IS_USER_CHAR(name[0])) {
+        *new_name = name + 1;
+    } else {
+         *new_name = name;
+    }
 }
 
 struct irc_user *irc_user_new(void)
