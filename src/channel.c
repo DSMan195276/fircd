@@ -50,6 +50,8 @@ void channel_clear (struct channel *current)
     CLOSE_FD(current->msgsfd);
 
     free(current->name);
+    free(current->topic);
+    free(current->topic_user);
 
     for (user = current->first_user; user != NULL; user = tmp) {
         tmp = user->next;
