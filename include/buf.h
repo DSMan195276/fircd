@@ -66,12 +66,12 @@ struct buf_fd {
             (maxfd) = (buf_fd).fd; \
     } while (0)
 
-#define OPEN_FILE(ptr, name) ptr->name##fd = open(#name , O_WRONLY | O_CREAT | O_APPEND | O_NONBLOCK, 0750)
+#define OPEN_FILE(ptr, name) (ptr)->name##fd = open(#name , O_WRONLY | O_CREAT | O_APPEND | O_NONBLOCK, 0750)
 
 #define OPEN_FIFO(ptr, name) \
     do { \
         mkfifo(#name, 0772); \
-        ptr->name ## fd.fd = open(#name , O_RDWR | O_NONBLOCK, 0); \
+        (ptr)->name ## fd.fd = open(#name , O_RDWR | O_NONBLOCK, 0); \
     } while (0)
 
 extern void buf_init(struct buf_fd *);
