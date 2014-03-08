@@ -160,6 +160,7 @@ void network_cons_auto_login (struct network_cons *con)
         if (cur != NULL) {
             tmp = network_copy(cur);
             tmp->con = con;
+            tmp->remove_files_on_close = con->conf.remove_files_on_close;
             tmp->next = con->head;
             con->head = tmp;
         }
