@@ -10,8 +10,6 @@
 
 #include <getopt.h>
 
-#include "net_cons.h"
-
-extern void parse_cmd_args (int argc, char **argv, struct network_cons *);
+extern void parse_cmd_args (int argc, char **argv);
 
 #endif

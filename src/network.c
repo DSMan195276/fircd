@@ -23,16 +23,15 @@
 #include "channel.h"
 #include "irc.h"
 #include "replies.h"
+#include "config.h"
 #include "network.h"
 
-void network_init(struct network *net, struct network_cons *con)
+void network_init(struct network *net)
 {
     memset(net, 0, sizeof(struct network));
     net->portno = DEFAULT_PORT;
-    if (con) {
-        net->con = con;
-        net->conf.remove_files_on_close = con->conf.net_global_conf.remove_files_on_close;
-    }
+
+    net->conf = prog_config.net_global_conf;
 
     buf_init(&net->sock);
     buf_init(&net->cmdfd);
@@ -215,7 +214,7 @@ struct network *network_copy (struct network *net)
     struct channel *tmp;
     struct network *newnet = malloc(sizeof(struct network));
 
-    network_init(newnet, NULL);
+    network_init(newnet);
 
     if (net->name)
         newnet->name = strdup(net->name);
@@ -231,7 +230,7 @@ struct network *network_copy (struct network *net)
     if (net->password)
         newnet->password = strdup(net->password);
 
-    newnet->conf.remove_files_on_close = net->conf.remove_files_on_close;
+    newnet->conf = net->conf;
     newnet->close_network = net->close_network;
 
     network_foreach_channel(net, tmp)

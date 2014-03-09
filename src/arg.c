@@ -14,7 +14,7 @@
 #include <getopt.h>
 
 #include "debug.h"
-#include "net_cons.h"
+#include "config.h"
 #include "arg.h"
 
 /*
@@ -77,11 +77,10 @@ static const char version_text[] =
 
 /* This code actually implements how to handle each operation. It's a bit bulky
  * but very simple. */
-void parse_cmd_args (int argc, char **argv, struct network_cons *con)
+void parse_cmd_args (int argc, char **argv)
 {
     int opt;
     int long_index = 0;
-    int size;
 
     while ((opt = getopt_long(argc, argv, shortopts, longopts, &long_index)) != -1) {
         DEBUG_PRINT("Argument: %d", opt);
@@ -96,21 +95,21 @@ void parse_cmd_args (int argc, char **argv, struct network_cons *con)
             exit(0);
             break;
         case OPT_NO_CFG:
-            con->no_config = 1;
+            prog_config.arg_no_config = 1;
             break;
         case OPT_FOR:
-            con->stay_in_forground = 1;
+            prog_config.arg_stay_in_forground = 1;
             break;
         case OPT_CFG:
-            con->config_file = strdup(optarg);
+            if (prog_config.config_file)
+                free(prog_config.config_file);
+            prog_config.config_file = strdup(optarg);
             break;
         case OPT_DONT:
-            con->dont_auto_load = 1;
+            prog_config.arg_dont_auto_load = 1;
             break;
         case OPT_NET:
-            size = ARRAY_SIZE(con->conf.auto_login);
-            ARRAY_RESIZE(con->conf.auto_login, size + 1);
-            con->conf.auto_login.arr[size] = strdup(optarg);
+            config_add_auto_login(optarg);
             DEBUG_PRINT("Auto-starting network %s", optarg);
             break;
         default:

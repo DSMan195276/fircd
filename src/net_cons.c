@@ -20,8 +20,6 @@
 #include "network.h"
 #include "net_cons.h"
 
-static const char default_config_file[] = "~/.fircdrc";
-
 void network_cons_init(struct network_cons *con)
 {
     memset(con, 0, sizeof(struct network_cons));
@@ -32,61 +30,15 @@ void network_cons_init(struct network_cons *con)
 void network_cons_clear(struct network_cons *con)
 {
     network_clear_all(con->head);
-    config_clear(&(con->conf));
 
     buf_free(&con->cmdfd);
 
     unlink("cmd");
-
-    free(con->config_file);
-}
-
-static void apply_net_override_settings(struct network_cons *con)
-{
-    struct network *net;
-    for (net = con->head; net != NULL; net = net->next) {
-        if (net->conf.remove_files_on_close == 2)
-            net->conf.remove_files_on_close = con->conf.net_global_conf.remove_files_on_close;
-    }
-
-    if (con->stay_in_forground)
-        con->conf.stay_in_forground = 1;
-}
-
-/* Returns 0 if file could be opened and parsed, or no file was specified and
- * the default file didn't exist. Returns 1 if the file was specified and it
- * didn't exist. */
-int network_cons_config_read(struct network_cons *con)
-{
-    int no_conf = 0, ret;
-    const char *filename;
-
-    if (con->no_config)
-        return 0;
-
-    if (con->config_file == NULL) {
-        no_conf = 1;
-        filename = default_config_file;
-    } else {
-        filename = con->config_file;
-    }
-
-    ret = config_read(&(con->conf), filename);
-    if (ret == 0)
-        apply_net_override_settings(con);
-
-    if (ret == 2)
-        return !no_conf;
-    else
-        return  ret;
 }
 
 void network_cons_init_directory(struct network_cons *con)
 {
     struct network *tmp;
-
-    mkdir(con->conf.root_directory, 0755);
-    chdir(con->conf.root_directory);
 
     mkfifo("cmd", 0755);
     con->cmdfd.fd = open("cmd", O_RDWR | O_NONBLOCK, 0);
@@ -143,18 +95,17 @@ void network_cons_handle_file_check(struct network_cons *con, fd_set *infd, fd_s
     handle_networks(con);
 }
 
-void network_cons_auto_login (struct network_cons *con)
+void network_cons_load_config(struct network_cons *con)
 {
     struct network *tmp, *cur;
     int i;
-    ARRAY_FOREACH(con->conf.auto_login, i) {
-        for (cur = con->conf.first; cur != NULL; cur = cur->next)
-            if (strcmp(cur->name, con->conf.auto_login.arr[i]) == 0)
+    ARRAY_FOREACH(prog_config.auto_login, i) {
+        for (cur = prog_config.first; cur != NULL; cur = cur->next)
+            if (strcmp(cur->name, prog_config.auto_login.arr[i]) == 0)
                 break;
         if (cur != NULL) {
             tmp = network_copy(cur);
             tmp->con = con;
-            tmp->conf.remove_files_on_close = con->conf.net_global_conf.remove_files_on_close;
             tmp->next = con->head;
             con->head = tmp;
         }

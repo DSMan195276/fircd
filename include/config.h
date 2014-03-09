@@ -10,6 +10,7 @@
 
 #include "global.h"
 #include "array.h"
+#include "net_cons.h"
 
 struct network;
 
@@ -21,15 +22,25 @@ struct config {
     ARRAY(char*, auto_login);
     struct network *first;
 
+    char *config_file;
     char *root_directory;
 
     struct network_config net_global_conf;
-    unsigned int stay_in_forground :2;
+
+    unsigned int arg_stay_in_forground :1;
+    unsigned int arg_dont_auto_load :1;
+    unsigned int arg_no_config :1;
+
+    unsigned int stay_in_forground :1;
 };
 
-extern int config_file_parse(void);
+extern struct config prog_config;
 
-extern int config_read (struct config *conf, const char *filename);
-extern void config_clear (struct config *conf);
+extern void config_init(void);
+
+extern int config_read(void);
+extern void config_clear(void);
+
+extern void config_add_auto_login(const char *login);
 
 #endif

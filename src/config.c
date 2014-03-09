@@ -21,6 +21,10 @@
 #include "network.h"
 #include "config.h"
 
+struct config prog_config;
+
+static const char default_config_file[] = "~/.fircdrc";
+
 static int login_type_callback(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result);
 
 static cfg_opt_t network_opts[] = {
@@ -71,7 +75,6 @@ static int login_type_callback(cfg_t *cfg, cfg_opt_t *opt, const char *value, vo
     return 0;
 }
 
-
 static char *sstrdup(const char *s)
 {
     if (s != NULL)
@@ -80,16 +83,25 @@ static char *sstrdup(const char *s)
         return NULL;
 }
 
-static void add_network(struct config *conf, cfg_t *network)
+void config_init(void)
+{
+    memset(&prog_config, 0, sizeof(struct config));
+
+    prog_config.root_directory = strdup("/tmp/irc");
+}
+
+static void add_network(cfg_t *network)
 {
     int i;
     struct network *net = malloc(sizeof(struct network));
 
-    network_init(net, NULL);
+    network_init(net);
     net->name = sstrdup(cfg_title(network));
     net->url = sstrdup(cfg_getstr(network, "server"));
     net->portno = cfg_getint(network, "port");
     net->conf.remove_files_on_close = (int)cfg_getbool(network,  "remove-files-on-close");
+    if (net->conf.remove_files_on_close == 2)
+        net->conf.remove_files_on_close = prog_config.net_global_conf.remove_files_on_close;
 
     net->nickname = sstrdup(cfg_getstr(network, "nickname"));
     net->realname = sstrdup(cfg_getstr(network, "realname"));
@@ -99,17 +111,26 @@ static void add_network(struct config *conf, cfg_t *network)
     for (i = 0; i < cfg_size(network, "channels"); i++)
         network_add_channel(net, cfg_getnstr(network, "channels", i));
 
-    net->next = conf->first;
-    conf->first = net;
+    net->next = prog_config.first;
+    prog_config.first = net;
 }
 
-int config_read(struct config *conf, const char *filename)
+int config_read(void)
 {
     int i;
     int ret, size;
     cfg_t *cfg;
+    const char *filename;
+
+    if (prog_config.arg_no_config)
+        return 0;
 
     cfg = cfg_init(main_opts, CFGF_NONE);
+
+    if (prog_config.config_file)
+        filename = prog_config.config_file;
+    else
+        filename = default_config_file;
 
     switch(cfg_parse(cfg, filename)) {
     case CFG_FILE_ERROR:
@@ -124,20 +145,24 @@ int config_read(struct config *conf, const char *filename)
     }
 
     if (cfg) {
-        conf->stay_in_forground = cfg_getbool(cfg, "stay-in-forground");
-        conf->net_global_conf.remove_files_on_close = cfg_getbool(cfg, "remove-files-on-close");
-        conf->root_directory = strdup(cfg_getstr(cfg, "root-directory"));
+        prog_config.stay_in_forground = cfg_getbool(cfg, "stay-in-forground");
+        if (prog_config.arg_stay_in_forground)
+            prog_config.stay_in_forground = 1;
+
+        prog_config.net_global_conf.remove_files_on_close = cfg_getbool(cfg, "remove-files-on-close");
+        if (prog_config.root_directory)
+            free(prog_config.root_directory);
+        prog_config.root_directory = strdup(cfg_getstr(cfg, "root-directory"));
 
         size = cfg_size(cfg, "network");
         for (i = 0; i < size; i++)
-            add_network(conf, cfg_getnsec(cfg, "network", i));
+            add_network(cfg_getnsec(cfg, "network", i));
 
         size = cfg_size(cfg, "auto-login");
         if (size > 0) {
             DEBUG_PRINT("Array size: %d", size);
-            ARRAY_RESIZE(conf->auto_login, size);
             for (i = 0; i < size; i++)
-                conf->auto_login.arr[i] = strdup(cfg_getnstr(cfg, "auto-login", i));
+                config_add_auto_login(cfg_getnstr(cfg, "auto-login", i));
         }
 
         ret = 0;
@@ -150,13 +175,31 @@ cleanup:
     return ret;
 }
 
-void config_clear(struct config *conf)
+void config_clear(void)
 {
     int i;
-    network_clear_all(conf->first);
-    free(conf->root_directory);
-    ARRAY_FOREACH(conf->auto_login, i)
-        free(conf->auto_login.arr[i]);
-    ARRAY_FREE(conf->auto_login);
+
+    network_clear_all(prog_config.first);
+
+    free(prog_config.root_directory);
+    free(prog_config.config_file);
+
+    ARRAY_FOREACH(prog_config.auto_login, i)
+        free(prog_config.auto_login.arr[i]);
+    ARRAY_FREE(prog_config.auto_login);
+}
+
+void config_add_auto_login(const char *login)
+{
+    int i, size;
+    ARRAY_FOREACH(prog_config.auto_login, i)
+        if (strcmp(prog_config.auto_login.arr[i], login) == 0)
+            return ;
+
+    size = ARRAY_SIZE(prog_config.auto_login);
+    ARRAY_RESIZE(prog_config.auto_login, size + 1);
+    prog_config.auto_login.arr[size] = strdup(login);
+
+    return ;
 }
 

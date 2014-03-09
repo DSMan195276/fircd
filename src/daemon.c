@@ -73,6 +73,7 @@ void daemon_kill(struct network_cons *con)
 
     DEBUG_PRINT("Closing networks...");
     network_cons_clear(con);
+    config_clear();
 
     DEBUG_PRINT("Done.");
     DEBUG_CLOSE();

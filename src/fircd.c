@@ -10,6 +10,7 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
 
@@ -31,6 +32,14 @@ static void sig_segv_handler(int seg)
     exit(0);
 }
 
+static void init_directory(void)
+{
+    mkdir(prog_config.root_directory, 0755);
+    chdir(prog_config.root_directory);
+
+    network_cons_init_directory(&state);
+}
+
 int main(int argc, char **argv)
 {
     int ret;
@@ -40,21 +49,23 @@ int main(int argc, char **argv)
     DEBUG_INIT();
     DEBUG_PRINT("Starting up...");
 
+    config_init();
+
     network_cons_init(&state);
 
     DEBUG_PRINT("Parsing arguments...");
-    parse_cmd_args(argc, argv, &state);
+    parse_cmd_args(argc, argv);
 
-    if (network_cons_config_read(&state) == 1)
+    if (config_read() == 1)
         return 1;
 
-    if (!state.dont_auto_load)
-        network_cons_auto_login(&state);
+    if (!prog_config.arg_dont_auto_load)
+        network_cons_load_config(&state);
 
-    if (!state.conf.stay_in_forground)
+    if (!prog_config.stay_in_forground)
         daemon_init(&state);
 
-    network_cons_init_directory(&state);
+    init_directory();
     network_cons_connect_networks(&state);
 
     signal(SIGILL, sig_int_handler);

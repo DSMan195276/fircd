@@ -20,14 +20,7 @@ struct network;
 struct network_cons {
     struct network *head;
 
-    char *config_file;
-    struct config conf;
-
     struct buf_fd cmdfd;
-
-    unsigned short stay_in_forground :1;
-    unsigned short no_config :1;
-    unsigned short dont_auto_load :1;
 };
 
 #define FDADD_FD_TO_CON(con, fd) \
@@ -46,13 +39,10 @@ struct network_cons {
 extern void network_cons_init  (struct network_cons *);
 extern void network_cons_clear (struct network_cons *);
 
-extern int  network_cons_config_read (struct network_cons *);
-
 extern void network_cons_init_directory (struct network_cons *);
 extern void network_cons_connect_networks (struct network_cons *);
 extern void network_cons_set_select_desc (struct network_cons *, fd_set *, fd_set *, int *);
 extern void network_cons_handle_file_check (struct network_cons *, fd_set *, fd_set *);
-
-extern void network_cons_auto_login (struct network_cons *);
+extern void network_cons_load_config (struct network_cons *);
 
 #endif
