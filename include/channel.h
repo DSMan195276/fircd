@@ -19,16 +19,16 @@
 #include "rbtree.h"
 #include "user.h"
 
-struct irc_user_node {
+struct channel_irc_user_node {
     struct irc_user user;
-    struct irc_user_node *next;
+    struct channel_irc_user_node *next;
 };
 
 /* 'channel' represents a node on a linked-list of channels */
 struct channel {
     struct network *net;
 
-    struct irc_user_node *first_user;
+    struct channel_irc_user_node *first_user;
 
     char *name;
     char *topic, *topic_user;
@@ -85,5 +85,10 @@ extern void channel_user_join (struct channel *, const struct irc_user *);
 extern void channel_user_part (struct channel *, const char *user);
 extern void channel_user_quit (struct channel *, const char *user);
 extern void channel_user_change (struct channel *, const char *old, const char *new);
+
+#define channel_foreach_user(chan, user) \
+    for (user = &(chan->first_user->user); \
+         user != NULL; \
+         user = &(container_of(user, struct channel_irc_user_node, user)->next->user))
 
 #endif

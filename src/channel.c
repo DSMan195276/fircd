@@ -38,7 +38,7 @@ void channel_init (struct channel *chan)
 
 void channel_clear (struct channel *current)
 {
-    struct irc_user_node *user, *tmp;
+    struct channel_irc_user_node *user, *tmp;
 
     CLOSE_FD(current->in.fd);
     buf_free(&current->in);
@@ -146,13 +146,13 @@ static void channel_write_topic(struct channel *chan)
 
 static void channel_write_users(struct channel *chan)
 {
-    struct irc_user_node *user;
+    struct irc_user *user;
 
     ftruncate(chan->onlinefd, 0);
     lseek(chan->onlinefd, 0, SEEK_SET);
 
-    for (user = chan->first_user; user != NULL; user = user->next) {
-        write(chan->onlinefd, user->user.formatted, strlen(user->user.formatted));
+    channel_foreach_user(chan, user) {
+        write(chan->onlinefd, user->formatted, strlen(user->formatted));
         write(chan->onlinefd, "\n", 1);
     }
 }
@@ -219,7 +219,7 @@ void channel_new_message (struct channel *chan, const char *user, const char *li
 
 void channel_user_online(struct channel *chan, const struct irc_user *user_cpy)
 {
-    struct irc_user_node *user, **current;
+    struct channel_irc_user_node *user, **current;
 
     user = malloc(sizeof(*user));
     user->next = NULL;
@@ -261,7 +261,7 @@ void channel_user_join(struct channel *chan, const struct irc_user *user_cpy)
 
 static int try_remove_user (struct channel *chan, const char *nick)
 {
-    struct irc_user_node **user, *found;
+    struct channel_irc_user_node **user, *found;
 
     for (user = &chan->first_user; *user != NULL; user = &((*user)->next)) {
         int cmp = strcmp((*user)->user.nick, nick);
@@ -323,7 +323,7 @@ void channel_user_quit (struct channel *chan, const char *nick)
 
 void channel_change_user(struct channel *chan, const char *old, const char *new)
 {
-    struct irc_user_node **user, *found;
+    struct channel_irc_user_node **user, *found;
 
     for (user = &chan->first_user; *user != NULL; user = &((*user)->next)) {
         int cmp = strcmp((*user)->user.nick, old);
