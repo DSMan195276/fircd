@@ -1,7 +1,10 @@
 
 include ./config.mk
 
-SRCS := $(wildcard src/*.c)
+LEX_SRCS := $(wildcard src/lex/*.l)
+LEX_CS := $(LEX_SRCS:.l=.c)
+
+SRCS := $(wildcard src/*.c) $(LEX_CS)
 OBJS := $(SRCS:.c=.o)
 
 
@@ -51,18 +54,24 @@ install_doc: doc
 	@echo " Doc Installation done"
 
 clean: clean_tests
+	@echo " RM      $(LEX_CS)"
+	$(Q)rm -f $(LEX_CS)
 	@echo " RM      $(OBJS)"
 	$(Q)rm -f $(OBJS)
 	@echo " RM      $(EXE)"
 	$(Q)rm -f $(EXE)
 
-$(EXE): $(OBJS)
+$(EXE): $(LEX_CS) $(OBJS)
 	@echo " CCLD    $@"
 	$(Q)$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 src/%.o: src/%.c
 	@echo " CC      $@"
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+src/%.c: src/%.l
+	@echo " LEX     $@"
+	$(Q)$(LEX) $(LFLAGS) -o $@ $<
 
 test: run_tests
 

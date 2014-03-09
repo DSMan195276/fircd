@@ -12,7 +12,10 @@ CFLAGS  := -Wall -I'./include' -O2 -std=c99           \
            -DFIRCD_SUBLEVEL=$(SUBLEVEL)               \
            -DFIRCD_PATCH=$(PATCH)                     \
            -DFIRCD_VERSION_N="$(VERSION_N)"
-LDFLAGS := -lconfuse
+LDFLAGS ?=
+LEX     := flex
+LFLAGS  := -Pcfg_yy
+
 
 # Install Paths
 PREFIX  := /usr
@@ -27,5 +30,5 @@ DOCDIR  := $(PREFIX)/share/doc/fircd
 # FIRCD_DEBUG := y
 
 # Show all commands executed by the Makefile
-VERBOSE := y
+# VERBOSE := y
 

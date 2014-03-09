@@ -15,10 +15,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <confuse.h>
 
 #include "debug.h"
 #include "network.h"
+#include "confuse.h"
 #include "config.h"
 
 struct config prog_config;
