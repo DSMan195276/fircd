@@ -350,12 +350,3 @@ void channel_change_user(struct channel *chan, const char *old, const char *new)
     channel_write_users(chan);
 }
 
-void channel_clear_all (struct channel *chan)
-{
-    struct channel *c, *tmp;
-    for (c = chan; c != NULL; c = tmp) {
-        tmp = c->next;
-        channel_clear(c);
-    }
-}
-

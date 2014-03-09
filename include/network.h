@@ -25,13 +25,18 @@ enum network_login {
     LOGIN_SASL
 };
 
+struct network_channel_node {
+    struct channel chan;
+    struct network_channel_node *next;
+};
+
 struct network_cons;
 
 struct network {
     struct network_cons *con;
     struct network *next;
 
-    struct channel *head;
+    struct network_channel_node *first_channel;
 
     enum network_login login_type;
 
@@ -52,6 +57,11 @@ struct network {
 };
 
 extern void network_init             (struct network *, struct network_cons *);
+#define network_foreach_channel(net, ch) \
+    for (ch = &(net->first_channel->chan); \
+         ch != NULL; \
+         ch = &(container_of(ch, struct network_channel_node, chan)->next->chan))
+
 extern void network_init_select_desc (struct network *, fd_set *infd, fd_set *outfd, int *maxfd);
 extern void network_setup_files      (struct network *);
 extern void network_handle_input     (struct network *, fd_set *, fd_set *);

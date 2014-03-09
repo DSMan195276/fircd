@@ -27,7 +27,6 @@ struct irc_user_node {
 /* 'channel' represents a node on a linked-list of channels */
 struct channel {
     struct network *net;
-    struct channel *next;
 
     struct irc_user_node *first_user;
 
@@ -48,7 +47,6 @@ struct channel {
  */
 extern void channel_init (struct channel *);
 extern void channel_clear (struct channel *);
-extern void channel_clear_all (struct channel *);
 
 /* These functions create and delete the channels filesystem
  * When calling these functions, you should be sure to chdir into the directory

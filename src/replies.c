@@ -36,7 +36,7 @@ static void r_privmsg(struct network *net, struct irc_reply *rpl)
 
     DEBUG_PRINT("PRIVMSG: %s %s", user, rpl->lines.arr[0]);
 
-    for (chan = net->head; chan != NULL; chan = chan->next) {
+    network_foreach_channel(net, chan) {
         DEBUG_PRINT("Checking channel: %s", chan->name);
         if (strcmp(rpl->lines.arr[0], chan->name) == 0) {
             channel_new_message(chan, user, rpl->colon);
@@ -74,7 +74,7 @@ static void r_topic(struct network *net, struct irc_reply *rpl)
         chan_nam = rpl->lines.arr[0];
 
     DEBUG_PRINT("Got a TOPIC");
-    for (chan = net->head; chan != NULL; chan = chan->next) {
+    network_foreach_channel(net, chan) {
         DEBUG_PRINT("Checking channel: %s", chan->name);
         if (strcmp(chan_nam, chan->name) == 0)
             channel_new_topic(chan, rpl->colon, rpl->prefix.user);
@@ -112,7 +112,7 @@ static void r_quit(struct network *net, struct irc_reply *rpl)
 {
     struct channel *chan;
 
-    for (chan = net->head; chan != NULL; chan = chan->next)
+    network_foreach_channel(net, chan)
         channel_user_quit(chan, rpl->prefix.user);
 }
 

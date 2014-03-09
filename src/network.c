@@ -62,7 +62,7 @@ void network_setup_files (struct network *net)
     net->realnamefd = open("realname", BUF_FILE_OPEN_FLAGS, 0750);
     net->nicknamefd = open("nickname", BUF_FILE_OPEN_FLAGS, 0750);
 
-    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+    network_foreach_channel(net, tmp)
         channel_create_files(tmp);
 
     chdir("..");
@@ -81,7 +81,7 @@ void network_delete_files (struct network *net)
     unlink("realname");
     unlink("nickname");
 
-    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+    network_foreach_channel(net, tmp)
         channel_remove_files(tmp);
 
     chdir("..");
@@ -104,7 +104,7 @@ void network_init_select_desc(struct network *net, fd_set *infd, fd_set *outfd, 
             *maxfd = net->cmdfd.fd;
     }
 
-    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+    network_foreach_channel(net, tmp)
         channel_reg_select(tmp, infd, outfd, maxfd);
 }
 
@@ -186,7 +186,7 @@ void network_handle_input (struct network *net, fd_set *infd, fd_set *outfd)
         }
     }
 
-    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+    network_foreach_channel(net, tmp)
         channel_handle_input(tmp, infd, outfd);
 }
 
@@ -204,7 +204,7 @@ void network_connect(struct network *net)
     if (net->password)
         irc_pass(net);
 
-    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+    network_foreach_channel(net, tmp)
         irc_join(net, tmp->name);
 
     network_write_joined(net);
@@ -234,7 +234,7 @@ struct network *network_copy (struct network *net)
     newnet->conf.remove_files_on_close = net->conf.remove_files_on_close;
     newnet->close_network = net->close_network;
 
-    for (tmp = net->head; tmp != NULL; tmp = tmp->next)
+    network_foreach_channel(net, tmp)
         network_add_channel(newnet, tmp->name);
 
     return newnet;
@@ -242,23 +242,23 @@ struct network *network_copy (struct network *net)
 
 struct channel *network_add_channel (struct network *net, const char *channel)
 {
-    struct channel *tmp_chan;
-    tmp_chan = malloc(sizeof(struct channel));
-    channel_init(tmp_chan);
-    tmp_chan->name = strdup(channel);
+    struct network_channel_node *tmp_chan;
+    tmp_chan = malloc(sizeof(struct network_channel_node));
+    channel_init(&tmp_chan->chan);
+    tmp_chan->chan.name = strdup(channel);
 
-    tmp_chan->net  = net;
-    tmp_chan->next = net->head;
-    net->head  = tmp_chan;
+    tmp_chan->chan.net  = net;
+    tmp_chan->next = net->first_channel;
+    net->first_channel = tmp_chan;
 
-    return tmp_chan;
+    return &tmp_chan->chan;
 }
 
 struct channel *network_find_channel (struct network *net, const char *channel)
 {
     struct channel *chan;
 
-    for (chan = net->head; chan != NULL; chan = chan->next)
+    network_foreach_channel(net, chan)
         if (strcmp(chan->name, channel) == 0)
             return chan;
 
@@ -308,7 +308,7 @@ void network_write_joined (struct network *net)
     struct channel *chan;
     ftruncate(net->joinedfd, 0);
     lseek(net->joinedfd, 0, SEEK_SET);
-    for (chan = net->head; chan != NULL; chan = chan->next) {
+    network_foreach_channel(net, chan) {
         write(net->joinedfd, chan->name, strlen(chan->name));
         write(net->joinedfd, "\n", 1);
     }
@@ -317,6 +317,7 @@ void network_write_joined (struct network *net)
 void network_clear (struct network *current)
 {
     int i;
+    struct network_channel_node *node, *tmp;
 
     CLOSE_FD(current->sock.fd);
     buf_free(&current->sock);
@@ -343,7 +344,10 @@ void network_clear (struct network *current)
         free(current->joined.arr[i]);
     ARRAY_FREE(current->joined);
 
-    channel_clear_all(current->head);
+    for (node = current->first_channel; node != NULL; node = tmp) {
+        tmp = node->next;
+        channel_clear(&tmp->chan);
+    }
 }
 
 void network_clear_all(struct network *net)
