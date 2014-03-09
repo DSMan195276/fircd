@@ -2,11 +2,10 @@ language: c
 
 compiler:
   - clang
+  - gcc
   
 install: 
-  - sudo apt-get install libconfuse-dev
-  - sudo apt-get install valgrind
+  - sudo apt-get install libconfuse-dev libconfuse-common libconfuse0 valgrind
   
 script:
-  - make
-  - make test
+  - make && make test

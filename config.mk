@@ -27,5 +27,5 @@ DOCDIR  := $(PREFIX)/share/doc/fircd
 # FIRCD_DEBUG := y
 
 # Show all commands executed by the Makefile
-# VERBOSE := y
+VERBOSE := y
 
