@@ -39,24 +39,18 @@ void network_cons_clear(struct network_cons *con)
     unlink("cmd");
 
     free(con->config_file);
-    free(con->dir);
 }
 
 static void apply_net_override_settings(struct network_cons *con)
 {
     struct network *net;
     for (net = con->head; net != NULL; net = net->next) {
-        if (net->remove_files_on_close == 2)
-            net->remove_files_on_close = con->conf.remove_files_on_close;
+        if (net->conf.remove_files_on_close == 2)
+            net->conf.remove_files_on_close = con->conf.net_global_conf.remove_files_on_close;
     }
 
     if (con->stay_in_forground)
         con->conf.stay_in_forground = 1;
-
-    if (con->dir) {
-        free(con->conf.root_directory);
-        con->conf.root_directory = strdup(con->dir);
-    }
 }
 
 /* Returns 0 if file could be opened and parsed, or no file was specified and
@@ -160,7 +154,7 @@ void network_cons_auto_login (struct network_cons *con)
         if (cur != NULL) {
             tmp = network_copy(cur);
             tmp->con = con;
-            tmp->remove_files_on_close = con->conf.remove_files_on_close;
+            tmp->conf.remove_files_on_close = con->conf.net_global_conf.remove_files_on_close;
             tmp->next = con->head;
             con->head = tmp;
         }

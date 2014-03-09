@@ -31,7 +31,7 @@ void network_init(struct network *net, struct network_cons *con)
     net->portno = DEFAULT_PORT;
     if (con) {
         net->con = con;
-        net->remove_files_on_close = con->conf.remove_files_on_close;
+        net->conf.remove_files_on_close = con->conf.net_global_conf.remove_files_on_close;
     }
 
     buf_init(&net->sock);
@@ -231,7 +231,7 @@ struct network *network_copy (struct network *net)
     if (net->password)
         newnet->password = strdup(net->password);
 
-    newnet->remove_files_on_close = net->remove_files_on_close;
+    newnet->conf.remove_files_on_close = net->conf.remove_files_on_close;
     newnet->close_network = net->close_network;
 
     for (tmp = net->head; tmp != NULL; tmp = tmp->next)
@@ -330,7 +330,7 @@ void network_clear (struct network *current)
     CLOSE_FD(current->realnamefd);
     CLOSE_FD(current->nicknamefd);
 
-    if (current->remove_files_on_close)
+    if (current->conf.remove_files_on_close)
         network_delete_files(current);
 
     free(current->name);

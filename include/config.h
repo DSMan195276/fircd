@@ -13,13 +13,18 @@
 
 struct network;
 
+struct network_config {
+    unsigned int remove_files_on_close :2;
+};
+
 struct config {
     ARRAY(char*, auto_login);
     struct network *first;
+
     char *root_directory;
 
-    unsigned int stay_in_forground :1;
-    unsigned int remove_files_on_close :1;
+    struct network_config net_global_conf;
+    unsigned int stay_in_forground :2;
 };
 
 extern int config_file_parse(void);

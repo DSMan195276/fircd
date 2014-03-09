@@ -15,6 +15,7 @@
 
 #include "array.h"
 #include "channel.h"
+#include "config.h"
 
 #define DEFAULT_PORT 6667
 
@@ -46,7 +47,7 @@ struct network {
     struct buf_fd cmdfd;
     int joinedfd, motdfd, rawfd, realnamefd, nicknamefd;
 
-    unsigned int remove_files_on_close :1;
+    struct network_config conf;
     unsigned int close_network :1;
 };
 

@@ -89,7 +89,7 @@ static void add_network(struct config *conf, cfg_t *network)
     net->name = sstrdup(cfg_title(network));
     net->url = sstrdup(cfg_getstr(network, "server"));
     net->portno = cfg_getint(network, "port");
-    net->remove_files_on_close = (int)cfg_getbool(network,  "remove-files-on-close");
+    net->conf.remove_files_on_close = (int)cfg_getbool(network,  "remove-files-on-close");
 
     net->nickname = sstrdup(cfg_getstr(network, "nickname"));
     net->realname = sstrdup(cfg_getstr(network, "realname"));
@@ -125,7 +125,7 @@ int config_read(struct config *conf, const char *filename)
 
     if (cfg) {
         conf->stay_in_forground = cfg_getbool(cfg, "stay-in-forground");
-        conf->remove_files_on_close = cfg_getbool(cfg, "remove-files-on-close");
+        conf->net_global_conf.remove_files_on_close = cfg_getbool(cfg, "remove-files-on-close");
         conf->root_directory = strdup(cfg_getstr(cfg, "root-directory"));
 
         size = cfg_size(cfg, "network");

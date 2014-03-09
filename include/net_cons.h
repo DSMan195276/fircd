@@ -25,8 +25,6 @@ struct network_cons {
 
     struct buf_fd cmdfd;
 
-    char *dir;
-
     unsigned short stay_in_forground :1;
     unsigned short no_config :1;
     unsigned short dont_auto_load :1;
