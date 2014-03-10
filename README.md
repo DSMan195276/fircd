@@ -70,8 +70,6 @@ makes heavy use of POSIX to do everything related to networking and the
 file-system, and thus you must have a POSIX compliant machine to compile and
 run fircd.
 
-fircd depends on libconfuse, and that must be installed before compiling fircd.
-
 A simple compile and install can be done like this:
 ```
 make
