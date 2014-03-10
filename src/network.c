@@ -345,7 +345,7 @@ void network_clear (struct network *current)
 
     for (node = current->first_channel; node != NULL; node = tmp) {
         tmp = node->next;
-        channel_clear(&tmp->chan);
+        channel_clear(&node->chan);
     }
 }
 
