@@ -13,6 +13,10 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License v2 as published by the
+ * Free Software Foundation.
  */
 #include "global.h"
 
@@ -45,10 +49,6 @@ extern char *cfg_qstring;
 
 char *cfg_yylval = 0;
 
-const char confuse_version[] = PACKAGE_VERSION;
-const char confuse_copyright[] = PACKAGE_STRING" by Martin Hedenfalk <martin@bzero.se>";
-const char confuse_author[] = "Martin Hedenfalk <martin@bzero.se>";
-
 static int cfg_parse_internal(cfg_t *cfg, int level,
                               int force_state, cfg_opt_t *force_opt);
 
@@ -56,7 +56,6 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
 #define STATE_EOF -1
 #define STATE_ERROR 1
 
-#ifndef HAVE_STRNDUP
 static char *strndup(const char *s, size_t n)
 {
     char *r;
@@ -70,9 +69,7 @@ static char *strndup(const char *s, size_t n)
     r[n] = 0;
     return r;
 }
-#endif
 
-#ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2)
 {
     assert(s1);
@@ -96,9 +93,8 @@ int strcasecmp(const char *s1, const char *s2)
 
     return 0;
 }
-#endif
 
-DLLIMPORT cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
+cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
 {
     unsigned int i;
     cfg_t *sec = cfg;
@@ -143,40 +139,40 @@ DLLIMPORT cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
     return 0;
 }
 
-DLLIMPORT const char *cfg_title(cfg_t *cfg)
+const char *cfg_title(cfg_t *cfg)
 {
     if(cfg)
         return cfg->title;
     return 0;
 }
 
-DLLIMPORT const char *cfg_name(cfg_t *cfg)
+const char *cfg_name(cfg_t *cfg)
 {
     if(cfg)
         return cfg->name;
     return 0;
 }
 
-DLLIMPORT const char *cfg_opt_name(cfg_opt_t *opt)
+const char *cfg_opt_name(cfg_opt_t *opt)
 {
     if(opt)
         return opt->name;
     return 0;
 }
 
-DLLIMPORT unsigned int cfg_opt_size(cfg_opt_t *opt)
+unsigned int cfg_opt_size(cfg_opt_t *opt)
 {
     if(opt)
         return opt->nvalues;
     return 0;
 }
 
-DLLIMPORT unsigned int cfg_size(cfg_t *cfg, const char *name)
+unsigned int cfg_size(cfg_t *cfg, const char *name)
 {
     return cfg_opt_size(cfg_getopt(cfg, name));
 }
 
-DLLIMPORT signed long cfg_opt_getnint(cfg_opt_t *opt, unsigned int index)
+signed long cfg_opt_getnint(cfg_opt_t *opt, unsigned int index)
 {
     assert(opt && opt->type == CFGT_INT);
     if(opt->values && index < opt->nvalues)
@@ -187,18 +183,18 @@ DLLIMPORT signed long cfg_opt_getnint(cfg_opt_t *opt, unsigned int index)
         return 0;
 }
 
-DLLIMPORT signed long cfg_getnint(cfg_t *cfg, const char *name,
+signed long cfg_getnint(cfg_t *cfg, const char *name,
                                   unsigned int index)
 {
     return cfg_opt_getnint(cfg_getopt(cfg, name), index);
 }
 
-DLLIMPORT signed long cfg_getint(cfg_t *cfg, const char *name)
+signed long cfg_getint(cfg_t *cfg, const char *name)
 {
     return cfg_getnint(cfg, name, 0);
 }
 
-DLLIMPORT double cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index)
+double cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index)
 {
     assert(opt && opt->type == CFGT_FLOAT);
     if(opt->values && index < opt->nvalues)
@@ -209,18 +205,18 @@ DLLIMPORT double cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index)
         return 0;
 }
 
-DLLIMPORT double cfg_getnfloat(cfg_t *cfg, const char *name,
+double cfg_getnfloat(cfg_t *cfg, const char *name,
                                unsigned int index)
 {
     return cfg_opt_getnfloat(cfg_getopt(cfg, name), index);
 }
 
-DLLIMPORT double cfg_getfloat(cfg_t *cfg, const char *name)
+double cfg_getfloat(cfg_t *cfg, const char *name)
 {
     return cfg_getnfloat(cfg, name, 0);
 }
 
-DLLIMPORT cfg_bool_t cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index)
+cfg_bool_t cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index)
 {
     assert(opt && opt->type == CFGT_BOOL);
     if(opt->values && index < opt->nvalues)
@@ -231,18 +227,18 @@ DLLIMPORT cfg_bool_t cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index)
         return cfg_false;
 }
 
-DLLIMPORT cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name,
+cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name,
                                   unsigned int index)
 {
     return cfg_opt_getnbool(cfg_getopt(cfg, name), index);
 }
 
-DLLIMPORT cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name)
+cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name)
 {
     return cfg_getnbool(cfg, name, 0);
 }
 
-DLLIMPORT char *cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index)
+char *cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index)
 {
     assert(opt && opt->type == CFGT_STR);
     if(opt->values && index < opt->nvalues)
@@ -253,17 +249,17 @@ DLLIMPORT char *cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index)
         return 0;
 }
 
-DLLIMPORT char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
+char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
 {
     return cfg_opt_getnstr(cfg_getopt(cfg, name), index);
 }
 
-DLLIMPORT char *cfg_getstr(cfg_t *cfg, const char *name)
+char *cfg_getstr(cfg_t *cfg, const char *name)
 {
     return cfg_getnstr(cfg, name, 0);
 }
 
-DLLIMPORT void *cfg_opt_getnptr(cfg_opt_t *opt, unsigned int index)
+void *cfg_opt_getnptr(cfg_opt_t *opt, unsigned int index)
 {
     assert(opt && opt->type == CFGT_PTR);
     if(opt->values && index < opt->nvalues)
@@ -274,17 +270,17 @@ DLLIMPORT void *cfg_opt_getnptr(cfg_opt_t *opt, unsigned int index)
         return 0;
 }
 
-DLLIMPORT void *cfg_getnptr(cfg_t *cfg, const char *name, unsigned int index)
+void *cfg_getnptr(cfg_t *cfg, const char *name, unsigned int index)
 {
     return cfg_opt_getnptr(cfg_getopt(cfg, name), index);
 }
 
-DLLIMPORT void *cfg_getptr(cfg_t *cfg, const char *name)
+void *cfg_getptr(cfg_t *cfg, const char *name)
 {
     return cfg_getnptr(cfg, name, 0);
 }
 
-DLLIMPORT cfg_t *cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index)
+cfg_t *cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index)
 {
     assert(opt && opt->type == CFGT_SEC);
     if(opt->values && index < opt->nvalues)
@@ -292,12 +288,12 @@ DLLIMPORT cfg_t *cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index)
     return 0;
 }
 
-DLLIMPORT cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
+cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
 {
     return cfg_opt_getnsec(cfg_getopt(cfg, name), index);
 }
 
-DLLIMPORT cfg_t *cfg_opt_gettsec(cfg_opt_t *opt, const char *title)
+cfg_t *cfg_opt_gettsec(cfg_opt_t *opt, const char *title)
 {
     unsigned int i, n;
 
@@ -323,12 +319,12 @@ DLLIMPORT cfg_t *cfg_opt_gettsec(cfg_opt_t *opt, const char *title)
     return 0;
 }
 
-DLLIMPORT cfg_t *cfg_gettsec(cfg_t *cfg, const char *name, const char *title)
+cfg_t *cfg_gettsec(cfg_t *cfg, const char *name, const char *title)
 {
     return cfg_opt_gettsec(cfg_getopt(cfg, name), title);
 }
 
-DLLIMPORT cfg_t *cfg_getsec(cfg_t *cfg, const char *name)
+cfg_t *cfg_getsec(cfg_t *cfg, const char *name)
 {
     return cfg_getnsec(cfg, name, 0);
 }
@@ -343,7 +339,7 @@ static cfg_value_t *cfg_addval(cfg_opt_t *opt)
     return opt->values[opt->nvalues++];
 }
 
-DLLIMPORT int cfg_numopts(cfg_opt_t *opts)
+int cfg_numopts(cfg_opt_t *opts)
 {
     int n;
 
@@ -376,7 +372,7 @@ static cfg_opt_t *cfg_dupopt_array(cfg_opt_t *opts)
     return dupopts;
 }
 
-DLLIMPORT int cfg_parse_boolean(const char *s)
+int cfg_parse_boolean(const char *s)
 {
     if(strcasecmp(s, "true") == 0
        || strcasecmp(s, "on") == 0
@@ -497,7 +493,7 @@ static void cfg_init_defaults(cfg_t *cfg)
     }
 }
 
-DLLIMPORT cfg_value_t *
+cfg_value_t *
 cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
 {
     cfg_value_t *val = 0;
@@ -509,6 +505,8 @@ cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
     char *endptr;
 
     assert(cfg && opt);
+
+    opt->was_set = 1;
 
     if(opt->simple_value.ptr)
     {
@@ -695,7 +693,7 @@ struct cfg_searchpath_t {
 
 /* prepend a new cfg_searchpath_t to the linked list */
 
-DLLIMPORT int cfg_add_searchpath(cfg_t *cfg, const char *dir)
+int cfg_add_searchpath(cfg_t *cfg, const char *dir)
 {
     cfg_searchpath_t *p;
     char *d;
@@ -718,7 +716,7 @@ DLLIMPORT int cfg_add_searchpath(cfg_t *cfg, const char *dir)
     return CFG_SUCCESS;
 }
 
-DLLIMPORT cfg_errfunc_t cfg_set_error_function(cfg_t *cfg,
+cfg_errfunc_t cfg_set_error_function(cfg_t *cfg,
                                                cfg_errfunc_t errfunc)
 {
     cfg_errfunc_t old;
@@ -729,7 +727,7 @@ DLLIMPORT cfg_errfunc_t cfg_set_error_function(cfg_t *cfg,
     return old;
 }
 
-DLLIMPORT void cfg_error(cfg_t *cfg, const char *fmt, ...)
+void cfg_error(cfg_t *cfg, const char *fmt, ...)
 {
     va_list ap;
 
@@ -1038,7 +1036,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
     return STATE_EOF;
 }
 
-DLLIMPORT int cfg_parse_fp(cfg_t *cfg, FILE *fp)
+int cfg_parse_fp(cfg_t *cfg, FILE *fp)
 {
     int ret;
     assert(cfg && fp);
@@ -1079,7 +1077,7 @@ static char *cfg_make_fullpath(const char *dir, const char *file)
     return path;
 }
 
-DLLIMPORT char *cfg_searchpath(cfg_searchpath_t *p, const char *file)
+char *cfg_searchpath(cfg_searchpath_t *p, const char *file)
 {
     char *fullpath;
     struct stat st;
@@ -1100,7 +1098,7 @@ DLLIMPORT char *cfg_searchpath(cfg_searchpath_t *p, const char *file)
     return NULL;
 }
 
-DLLIMPORT int cfg_parse(cfg_t *cfg, const char *filename)
+int cfg_parse(cfg_t *cfg, const char *filename)
 {
     int ret;
     FILE *fp;
@@ -1133,7 +1131,7 @@ DLLIMPORT int cfg_parse(cfg_t *cfg, const char *filename)
     return ret;
 }
 
-DLLIMPORT int cfg_parse_buf(cfg_t *cfg, const char *buf)
+int cfg_parse_buf(cfg_t *cfg, const char *buf)
 {
     int ret;
 
@@ -1153,7 +1151,7 @@ DLLIMPORT int cfg_parse_buf(cfg_t *cfg, const char *buf)
     return CFG_SUCCESS;
 }
 
-DLLIMPORT cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
+cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
 {
     cfg_t *cfg;
 
@@ -1172,7 +1170,7 @@ DLLIMPORT cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
     return cfg;
 }
 
-DLLIMPORT char *cfg_tilde_expand(const char *filename)
+char *cfg_tilde_expand(const char *filename)
 {
     char *expanded = 0;
 
@@ -1215,7 +1213,7 @@ DLLIMPORT char *cfg_tilde_expand(const char *filename)
     return expanded;
 }
 
-DLLIMPORT void cfg_free_value(cfg_opt_t *opt)
+void cfg_free_value(cfg_opt_t *opt)
 {
     if(opt == 0)
         return;
@@ -1266,7 +1264,7 @@ static void cfg_free_searchpath(cfg_searchpath_t* p)
     }
 }
 
-DLLIMPORT void cfg_free(cfg_t *cfg)
+void cfg_free(cfg_t *cfg)
 {
     int i;
 
@@ -1286,7 +1284,7 @@ DLLIMPORT void cfg_free(cfg_t *cfg)
     free(cfg);
 }
 
-DLLIMPORT int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
+int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
                           const char **argv)
 {
     opt = NULL;
@@ -1322,7 +1320,7 @@ static cfg_value_t *cfg_opt_getval(cfg_opt_t *opt, unsigned int index)
     return val;
 }
 
-DLLIMPORT void cfg_opt_setnint(cfg_opt_t *opt, long int value,
+void cfg_opt_setnint(cfg_opt_t *opt, long int value,
                                unsigned int index)
 {
     cfg_value_t *val;
@@ -1331,18 +1329,18 @@ DLLIMPORT void cfg_opt_setnint(cfg_opt_t *opt, long int value,
     val->number = value;
 }
 
-DLLIMPORT void cfg_setnint(cfg_t *cfg, const char *name,
+void cfg_setnint(cfg_t *cfg, const char *name,
                      long int value, unsigned int index)
 {
     cfg_opt_setnint(cfg_getopt(cfg, name), value, index);
 }
 
-DLLIMPORT void cfg_setint(cfg_t *cfg, const char *name, long int value)
+void cfg_setint(cfg_t *cfg, const char *name, long int value)
 {
     cfg_setnint(cfg, name, value, 0);
 }
 
-DLLIMPORT void cfg_opt_setnfloat(cfg_opt_t *opt, double value,
+void cfg_opt_setnfloat(cfg_opt_t *opt, double value,
                                  unsigned int index)
 {
     cfg_value_t *val;
@@ -1351,18 +1349,18 @@ DLLIMPORT void cfg_opt_setnfloat(cfg_opt_t *opt, double value,
     val->fpnumber = value;
 }
 
-DLLIMPORT void cfg_setnfloat(cfg_t *cfg, const char *name,
+void cfg_setnfloat(cfg_t *cfg, const char *name,
                    double value, unsigned int index)
 {
     cfg_opt_setnfloat(cfg_getopt(cfg, name), value, index);
 }
 
-DLLIMPORT void cfg_setfloat(cfg_t *cfg, const char *name, double value)
+void cfg_setfloat(cfg_t *cfg, const char *name, double value)
 {
     cfg_setnfloat(cfg, name, value, 0);
 }
 
-DLLIMPORT void cfg_opt_setnbool(cfg_opt_t *opt, cfg_bool_t value,
+void cfg_opt_setnbool(cfg_opt_t *opt, cfg_bool_t value,
                                 unsigned int index)
 {
     cfg_value_t *val;
@@ -1371,18 +1369,18 @@ DLLIMPORT void cfg_opt_setnbool(cfg_opt_t *opt, cfg_bool_t value,
     val->boolean = value;
 }
 
-DLLIMPORT void cfg_setnbool(cfg_t *cfg, const char *name,
+void cfg_setnbool(cfg_t *cfg, const char *name,
                             cfg_bool_t value, unsigned int index)
 {
     cfg_opt_setnbool(cfg_getopt(cfg, name), value, index);
 }
 
-DLLIMPORT void cfg_setbool(cfg_t *cfg, const char *name, cfg_bool_t value)
+void cfg_setbool(cfg_t *cfg, const char *name, cfg_bool_t value)
 {
     cfg_setnbool(cfg, name, value, 0);
 }
 
-DLLIMPORT void cfg_opt_setnstr(cfg_opt_t *opt, const char *value,
+void cfg_opt_setnstr(cfg_opt_t *opt, const char *value,
                                unsigned int index)
 {
     cfg_value_t *val;
@@ -1392,13 +1390,13 @@ DLLIMPORT void cfg_opt_setnstr(cfg_opt_t *opt, const char *value,
     val->string = value ? strdup(value) : 0;
 }
 
-DLLIMPORT void cfg_setnstr(cfg_t *cfg, const char *name,
+void cfg_setnstr(cfg_t *cfg, const char *name,
                            const char *value, unsigned int index)
 {
     cfg_opt_setnstr(cfg_getopt(cfg, name), value, index);
 }
 
-DLLIMPORT void cfg_setstr(cfg_t *cfg, const char *name, const char *value)
+void cfg_setstr(cfg_t *cfg, const char *name, const char *value)
 {
     cfg_setnstr(cfg, name, value, 0);
 }
@@ -1434,7 +1432,7 @@ static void cfg_addlist_internal(cfg_opt_t *opt,
     }
 }
 
-DLLIMPORT void cfg_setlist(cfg_t *cfg, const char *name,
+void cfg_setlist(cfg_t *cfg, const char *name,
                            unsigned int nvalues, ...)
 {
     va_list ap;
@@ -1448,7 +1446,7 @@ DLLIMPORT void cfg_setlist(cfg_t *cfg, const char *name,
     va_end(ap);
 }
 
-DLLIMPORT void cfg_addlist(cfg_t *cfg, const char *name,
+void cfg_addlist(cfg_t *cfg, const char *name,
                            unsigned int nvalues, ...)
 {
     va_list ap;
@@ -1461,7 +1459,7 @@ DLLIMPORT void cfg_addlist(cfg_t *cfg, const char *name,
     va_end(ap);
 }
 
-DLLIMPORT void cfg_opt_nprint_var(cfg_opt_t *opt, unsigned int index, FILE *fp)
+void cfg_opt_nprint_var(cfg_opt_t *opt, unsigned int index, FILE *fp)
 {
     const char *str;
 
@@ -1506,7 +1504,7 @@ static void cfg_indent(FILE *fp, int indent)
         fprintf(fp, "  ");
 }
 
-DLLIMPORT void cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent)
+void cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent)
 {
     assert(opt && fp);
 
@@ -1588,12 +1586,12 @@ DLLIMPORT void cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent)
     }
 }
 
-DLLIMPORT void cfg_opt_print(cfg_opt_t *opt, FILE *fp)
+void cfg_opt_print(cfg_opt_t *opt, FILE *fp)
 {
     cfg_opt_print_indent(opt, fp, 0);
 }
 
-DLLIMPORT void cfg_print_indent(cfg_t *cfg, FILE *fp, int indent)
+void cfg_print_indent(cfg_t *cfg, FILE *fp, int indent)
 {
     int i;
 
@@ -1601,12 +1599,12 @@ DLLIMPORT void cfg_print_indent(cfg_t *cfg, FILE *fp, int indent)
         cfg_opt_print_indent(&cfg->opts[i], fp, indent);
 }
 
-DLLIMPORT void cfg_print(cfg_t *cfg, FILE *fp)
+void cfg_print(cfg_t *cfg, FILE *fp)
 {
     cfg_print_indent(cfg, fp, 0);
 }
 
-DLLIMPORT cfg_print_func_t cfg_opt_set_print_func(cfg_opt_t *opt,
+cfg_print_func_t cfg_opt_set_print_func(cfg_opt_t *opt,
                                                   cfg_print_func_t pf)
 {
     cfg_print_func_t oldpf;
@@ -1618,7 +1616,7 @@ DLLIMPORT cfg_print_func_t cfg_opt_set_print_func(cfg_opt_t *opt,
     return oldpf;
 }
 
-DLLIMPORT cfg_print_func_t cfg_set_print_func(cfg_t *cfg, const char *name,
+cfg_print_func_t cfg_set_print_func(cfg_t *cfg, const char *name,
                                               cfg_print_func_t pf)
 {
     return cfg_opt_set_print_func(cfg_getopt(cfg, name), pf);
@@ -1689,7 +1687,7 @@ static cfg_opt_t *cfg_getopt_array(cfg_opt_t *rootopts, int cfg_flags, const cha
     return 0;
 }
 
-DLLIMPORT cfg_validate_callback_t cfg_set_validate_func(cfg_t *cfg,
+cfg_validate_callback_t cfg_set_validate_func(cfg_t *cfg,
                                                         const char *name,
                                                         cfg_validate_callback_t vf)
 {

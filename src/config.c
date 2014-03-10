@@ -30,7 +30,7 @@ static int login_type_callback(cfg_t *cfg, cfg_opt_t *opt, const char *value, vo
 static cfg_opt_t network_opts[] = {
     CFG_STR      ("server",                NULL,       CFGF_NODEFAULT),
     CFG_INT      ("port",                  6667,       CFGF_NONE),
-    CFG_BOOL     ("remove-files-on-close",    2,  CFGF_NONE),
+    CFG_BOOL     ("remove-files-on-close",    0,  CFGF_NONE),
     CFG_STR      ("nickname",              NULL,       CFGF_NODEFAULT),
     CFG_STR      ("realname",              NULL,       CFGF_NONE),
     CFG_STR      ("password",              NULL,       CFGF_NONE),
@@ -93,14 +93,18 @@ void config_init(void)
 static void add_network(cfg_t *network)
 {
     int i;
+    cfg_opt_t *opt;
     struct network *net = malloc(sizeof(struct network));
 
     network_init(net);
     net->name = sstrdup(cfg_title(network));
     net->url = sstrdup(cfg_getstr(network, "server"));
     net->portno = cfg_getint(network, "port");
-    net->conf.remove_files_on_close = (int)cfg_getbool(network,  "remove-files-on-close");
-    if (net->conf.remove_files_on_close == 2)
+
+    opt = cfg_getopt(network, "remove-files-on-close");
+    if (opt->was_set)
+        net->conf.remove_files_on_close = cfg_opt_getnbool(opt, 0);
+    else
         net->conf.remove_files_on_close = prog_config.net_global_conf.remove_files_on_close;
 
     net->nickname = sstrdup(cfg_getstr(network, "nickname"));

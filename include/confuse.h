@@ -13,6 +13,10 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License v2 as published by the
+ * Free Software Foundation.
  */
 
 /** A configuration file parser library.
@@ -34,8 +38,8 @@
  * <em>If you can't convince, confuse.</em>
  */
 
-#ifndef _cfg_h_
-#define _cfg_h_
+#ifndef INCLUDE_CONFUSE_H
+#define INCLUDE_CONFUSE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,10 +55,6 @@ extern "C" {
 #define PACKAGE_TARNAME confuse
 #define PACKAGE_URL ""
 #define PACKAGE_VERSION "2.7"
-
-#define DLLIMPORT
-
-#define __export
 
 /** Fundamental option types */
 enum cfg_type_t {
@@ -145,7 +145,7 @@ typedef int (*cfg_func_t)(cfg_t *cfg, cfg_opt_t *opt,
  * @see cfg_print, cfg_set_print_func
  */
 typedef void (*cfg_print_func_t)(cfg_opt_t *opt, unsigned int index, FILE *fp);
-    
+
 /** Value parsing callback prototype
  *
  * This is a callback function (different from the one registered with the
@@ -218,7 +218,7 @@ struct cfg_t {
     cfg_errfunc_t errfunc;  /**< This function (if set with
                              * cfg_set_error_function) is called for
                              * any error message. */
-    cfg_searchpath_t *path; /**< Linked list of directories to search */ 
+    cfg_searchpath_t *path; /**< Linked list of directories to search */
 };
 
 /** Data structure holding the value of a fundamental option value.
@@ -276,11 +276,13 @@ struct cfg_opt_t {
     cfg_validate_callback_t validcb; /**< Value validating callback function */
     cfg_print_func_t pf;    /**< print callback function */
     cfg_free_func_t freecb; /***< user-defined memory release function */
+
+    unsigned int was_set :1;
 };
 
-extern const char __export confuse_copyright[];
-extern const char __export confuse_version[];
-extern const char __export confuse_author[];
+extern const char confuse_copyright[];
+extern const char confuse_version[];
+extern const char confuse_author[];
 
 #define __CFG_STR(name, def, flags, svalue, cb) \
   {name,CFGT_STR,0,0,flags,0,{0,0,cfg_false,def,0},0,{.string=svalue},cb,0,0,0}
@@ -499,7 +501,7 @@ extern const char __export confuse_author[];
 /** Initialize a user-defined option
  *
  * CFG_PTR options can only be used together with a value parsing callback.
- * 
+ *
  * @param name The name of the option
  * @param def Default value
  * @param flags Flags
@@ -535,7 +537,7 @@ extern const char __export confuse_author[];
  * segmentation faults.
  *
  * The options must no longer be defined in the same scope as where the cfg_xxx
- * functions are used (since version 2.3). 
+ * functions are used (since version 2.3).
  *
  * @param opts An arrary of options
  * @param flags One or more flags (bitwise or'ed together). Currently only
@@ -544,38 +546,38 @@ extern const char __export confuse_author[];
  * @return A configuration context structure. This pointer is passed
  * to almost all other functions as the first parameter.
  */
-DLLIMPORT cfg_t * __export cfg_init(cfg_opt_t *opts, cfg_flag_t flags);
+cfg_t * cfg_init(cfg_opt_t *opts, cfg_flag_t flags);
 
-/** Add a searchpath directory to the configuration context, the 
- * const char* argument will be duplicated and then freed as part 
+/** Add a searchpath directory to the configuration context, the
+ * const char* argument will be duplicated and then freed as part
  * of the usual context takedown.
  *
  * All directories added to the context in this manner will be searched
  * for the file specified in cfg_parse(), and for those included.
  * All directories added with this function will be "tilde expanded".
  * Note that the current directory is not added to the searchpath
- * by default. 
+ * by default.
  *
  * @param cfg The configuration file context as returned from cfg_init().
  * @param dir Directory to be added to the search path.
  *
- * @return On success, CFG_SUCCESS, on failure (which can only be 
+ * @return On success, CFG_SUCCESS, on failure (which can only be
  * caused by a failed malloc()), CFG_PARSE_ERROR.
  */
-DLLIMPORT int __export cfg_add_searchpath(cfg_t *cfg, const char *dir);
+int cfg_add_searchpath(cfg_t *cfg, const char *dir);
 
 /** Search the linked-list of cfg_searchpath_t for the specified
  * file.  If not NULL, the return value is freshly allocated and
  * and should be freed by the caller.
  *
- * @param path The linked list of cfg_searchpath_t structs, each 
+ * @param path The linked list of cfg_searchpath_t structs, each
  * containg a directory to be searched
  * @param file The file for which to search
  *
  * @return If the file is found on the searchpath then the full
- * path to the file is returned. If not found, NULL is returned.  
+ * path to the file is returned. If not found, NULL is returned.
  */
-DLLIMPORT char *__export cfg_searchpath(cfg_searchpath_t* path, 
+char *cfg_searchpath(cfg_searchpath_t* path,
 					const char *file);
 
 /** Parse a configuration file. Tilde expansion is performed on the
@@ -591,7 +593,7 @@ DLLIMPORT char *__export cfg_searchpath(cfg_searchpath_t* path,
  * errors, CFG_PARSE_ERROR is returned and cfg_error() was called with
  * a descriptive error message.
  */
-DLLIMPORT int __export cfg_parse(cfg_t *cfg, const char *filename);
+int cfg_parse(cfg_t *cfg, const char *filename);
 
 /** Same as cfg_parse() above, but takes an already opened file as
  * argument. Reading begins at the current position. After parsing,
@@ -603,7 +605,7 @@ DLLIMPORT int __export cfg_parse(cfg_t *cfg, const char *filename);
  *
  * @see cfg_parse()
  */
-DLLIMPORT int __export cfg_parse_fp(cfg_t *cfg, FILE *fp);
+int cfg_parse_fp(cfg_t *cfg, FILE *fp);
 
 /** Same as cfg_parse() above, but takes a character buffer as
  * argument.
@@ -613,37 +615,37 @@ DLLIMPORT int __export cfg_parse_fp(cfg_t *cfg, FILE *fp);
  *
  * @see cfg_parse()
  */
-DLLIMPORT int __export cfg_parse_buf(cfg_t *cfg, const char *buf);
+int cfg_parse_buf(cfg_t *cfg, const char *buf);
 
 /** Free the memory allocated for the values of a given option. Only
  * the values are freed, not the option itself (it is freed by cfg_free()).
  *
  * @see cfg_free()
  */
-DLLIMPORT void __export cfg_free_value(cfg_opt_t *opt);
+void cfg_free_value(cfg_opt_t *opt);
 
 /** Free a cfg_t context. All memory allocated by the cfg_t context
  * structure are freed, and can't be used in any further cfg_* calls.
  */
-DLLIMPORT void __export cfg_free(cfg_t *cfg);
+void cfg_free(cfg_t *cfg);
 
 /** Install a user-defined error reporting function.
  * @return The old error reporting function is returned.
  */
-DLLIMPORT cfg_errfunc_t __export cfg_set_error_function(cfg_t *cfg,
+cfg_errfunc_t cfg_set_error_function(cfg_t *cfg,
                                                         cfg_errfunc_t errfunc);
 
 /** Show a parser error. Any user-defined error reporting function is called.
  * @see cfg_set_error_function
  */
-DLLIMPORT void __export cfg_error(cfg_t *cfg, const char *fmt, ...);
+void cfg_error(cfg_t *cfg, const char *fmt, ...);
 
 /** Returns the value of an integer option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnint
  */
-DLLIMPORT signed long __export cfg_opt_getnint(cfg_opt_t *opt, unsigned int index);
+signed long cfg_opt_getnint(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getint(), used for lists.
  * @param cfg The configuration file context.
@@ -651,7 +653,7 @@ DLLIMPORT signed long __export cfg_opt_getnint(cfg_opt_t *opt, unsigned int inde
  * @param index Index of the value to get. Zero based.
  * @see cfg_getint
  */
-DLLIMPORT long int __export cfg_getnint(cfg_t *cfg, const char *name,
+long int cfg_getnint(cfg_t *cfg, const char *name,
                                         unsigned int index);
 
 /** Returns the value of an integer option. This is the same as
@@ -663,14 +665,14 @@ DLLIMPORT long int __export cfg_getnint(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-DLLIMPORT long int __export cfg_getint(cfg_t *cfg, const char *name);
+long int cfg_getint(cfg_t *cfg, const char *name);
 
 /** Returns the value of a floating point option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnfloat
  */
-DLLIMPORT double __export cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index);
+double cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getfloat(), used for lists.
  * @param cfg The configuration file context.
@@ -678,7 +680,7 @@ DLLIMPORT double __export cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getfloat
  */
-DLLIMPORT double __export cfg_getnfloat(cfg_t *cfg, const char *name,
+double cfg_getnfloat(cfg_t *cfg, const char *name,
                                         unsigned int index);
 
 /** Returns the value of a floating point option.
@@ -689,14 +691,14 @@ DLLIMPORT double __export cfg_getnfloat(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-DLLIMPORT double __export cfg_getfloat(cfg_t *cfg, const char *name);
+double cfg_getfloat(cfg_t *cfg, const char *name);
 
 /** Returns the value of a string option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnstr
  */
-DLLIMPORT char * __export cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index);
+char * cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getstr(), used for lists.
  * @param cfg The configuration file context.
@@ -704,7 +706,7 @@ DLLIMPORT char * __export cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getstr
  */
-DLLIMPORT char * __export cfg_getnstr(cfg_t *cfg, const char *name,
+char * cfg_getnstr(cfg_t *cfg, const char *name,
                                       unsigned int index);
 
 /** Returns the value of a string option.
@@ -715,15 +717,15 @@ DLLIMPORT char * __export cfg_getnstr(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-DLLIMPORT char * __export cfg_getstr(cfg_t *cfg, const char *name);
+char * cfg_getstr(cfg_t *cfg, const char *name);
 
 /** Returns the value of a boolean option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnbool
  */
-DLLIMPORT cfg_bool_t __export cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index);
-    
+cfg_bool_t cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index);
+
 /** Indexed version of cfg_getbool(), used for lists.
  *
  * @param cfg The configuration file context.
@@ -731,7 +733,7 @@ DLLIMPORT cfg_bool_t __export cfg_opt_getnbool(cfg_opt_t *opt, unsigned int inde
  * @param index Index of the value to get. Zero based.
  * @see cfg_getbool
  */
-DLLIMPORT cfg_bool_t __export cfg_getnbool(cfg_t *cfg, const char *name,
+cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name,
                                            unsigned int index);
 
 /** Returns the value of a boolean option.
@@ -742,11 +744,11 @@ DLLIMPORT cfg_bool_t __export cfg_getnbool(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-DLLIMPORT cfg_bool_t __export cfg_getbool(cfg_t *cfg, const char *name);
+cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name);
 
 
-DLLIMPORT void * __export cfg_opt_getnptr(cfg_opt_t *opt, unsigned int index);
-DLLIMPORT void * __export cfg_getnptr(cfg_t *cfg, const char *name, unsigned int indx);
+void * cfg_opt_getnptr(cfg_opt_t *opt, unsigned int index);
+void * cfg_getnptr(cfg_t *cfg, const char *name, unsigned int indx);
 
 /** Returns the value of a user-defined option (void pointer).
  * @param cfg The configuration file context.
@@ -756,7 +758,7 @@ DLLIMPORT void * __export cfg_getnptr(cfg_t *cfg, const char *name, unsigned int
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-DLLIMPORT void * __export cfg_getptr(cfg_t *cfg, const char *name);
+void * cfg_getptr(cfg_t *cfg, const char *name);
 
 
 /** Returns the value of a section option, given a cfg_opt_t pointer.
@@ -764,7 +766,7 @@ DLLIMPORT void * __export cfg_getptr(cfg_t *cfg, const char *name);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnsec
  */
-DLLIMPORT cfg_t * __export cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index);
+cfg_t * cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getsec(), used for sections with the
  * CFGF_MULTI flag set.
@@ -774,7 +776,7 @@ DLLIMPORT cfg_t * __export cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the section to get. Zero based.
  * @see cfg_getsec
  */
-DLLIMPORT cfg_t * __export cfg_getnsec(cfg_t *cfg, const char *name,
+cfg_t * cfg_getnsec(cfg_t *cfg, const char *name,
                                        unsigned int index);
 
 /** Returns the value of a section option, given a cfg_opt_t pointer
@@ -784,7 +786,7 @@ DLLIMPORT cfg_t * __export cfg_getnsec(cfg_t *cfg, const char *name,
  * have been set for this option.
  * @see cfg_gettsec
  */
-DLLIMPORT cfg_t * __export cfg_opt_gettsec(cfg_opt_t *opt, const char *title);
+cfg_t * cfg_opt_gettsec(cfg_opt_t *opt, const char *title);
 
 /** Return a section given the title, used for section with the
  * CFGF_TITLE flag set.
@@ -795,7 +797,7 @@ DLLIMPORT cfg_t * __export cfg_opt_gettsec(cfg_opt_t *opt, const char *title);
  * have been set for this option.
  * @see cfg_getsec
  */
-DLLIMPORT cfg_t * __export cfg_gettsec(cfg_t *cfg, const char *name,
+cfg_t * cfg_gettsec(cfg_t *cfg, const char *name,
                                        const char *title);
 
 /** Returns the value of a section option. The returned value is
@@ -808,14 +810,14 @@ DLLIMPORT cfg_t * __export cfg_gettsec(cfg_t *cfg, const char *name,
  * section without the CFGF_MULTI flag set. It is an error to try to
  * get a section that isn't declared.
  */
-DLLIMPORT cfg_t * __export cfg_getsec(cfg_t *cfg, const char *name);
+cfg_t * cfg_getsec(cfg_t *cfg, const char *name);
 
 /** Return the number of values this option has. If no default value
  * is given for the option and no value was found in the config file,
  * 0 will be returned (ie, the option value is not set at all).
  * @param opt The option structure (eg, as returned from cfg_getopt())
  */
-DLLIMPORT unsigned int __export cfg_opt_size(cfg_opt_t *opt);
+unsigned int cfg_opt_size(cfg_opt_t *opt);
 
 /** Return the number of values this option has. If no default value
  * is given for the option and no value was found in the config file,
@@ -829,7 +831,7 @@ DLLIMPORT unsigned int __export cfg_opt_size(cfg_opt_t *opt);
  * @param cfg The configuration file context.
  * @param name The name of the option.
  */
-DLLIMPORT unsigned int __export cfg_size(cfg_t *cfg, const char *name);
+unsigned int cfg_size(cfg_t *cfg, const char *name);
 
 /** Return the title of a section.
  *
@@ -837,7 +839,7 @@ DLLIMPORT unsigned int __export cfg_size(cfg_t *cfg, const char *name);
  * @return Returns the title, or 0 if there is no title. This string
  * should not be modified.
  */
-DLLIMPORT const char * __export cfg_title(cfg_t *cfg);
+const char * cfg_title(cfg_t *cfg);
 
 /** Return the name of a section.
  *
@@ -845,7 +847,7 @@ DLLIMPORT const char * __export cfg_title(cfg_t *cfg);
  * @return Returns the title, or 0 if there is no title. This string
  * should not be modified.
  */
-DLLIMPORT const char * __export cfg_name(cfg_t *cfg);
+const char * cfg_name(cfg_t *cfg);
 
 /** Return the name of an option.
  *
@@ -853,14 +855,14 @@ DLLIMPORT const char * __export cfg_name(cfg_t *cfg);
  * @return Returns the title, or 0 if there is no title. This string
  * should not be modified.
  */
-DLLIMPORT const char * __export cfg_opt_name(cfg_opt_t *opt);
+const char * cfg_opt_name(cfg_opt_t *opt);
 
 /** Predefined include-function. This function can be used in the
  * options passed to cfg_init() to specify a function for including
  * other configuration files in the parsing. For example:
  * CFG_FUNC("include", &cfg_include)
  */
-DLLIMPORT int __export cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
+int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
                                    const char **argv);
 
 /** Does tilde expansion (~ -> $HOME) on the filename.
@@ -869,7 +871,7 @@ DLLIMPORT int __export cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
  * dynamically allocated string is returned, which should be free()'d
  * by the caller.
  */
-DLLIMPORT char * __export cfg_tilde_expand(const char *filename);
+char * cfg_tilde_expand(const char *filename);
 
 /** Parse a boolean option string. Accepted "true" values are "true",
  * "on" and "yes", and accepted "false" values are "false", "off" and
@@ -878,7 +880,7 @@ DLLIMPORT char * __export cfg_tilde_expand(const char *filename);
  * @return Returns 1 or 0 (true/false) if the string was parsed
  * correctly, or -1 if an error occurred.
  */
-DLLIMPORT int __export cfg_parse_boolean(const char *s);
+int cfg_parse_boolean(const char *s);
 
 /** Return an option given it's name.
  *
@@ -888,7 +890,7 @@ DLLIMPORT int __export cfg_parse_boolean(const char *s);
  * @return Returns a pointer to the option. If the option isn't declared,
  * libConfuse will print an error message and return 0.
  */
-DLLIMPORT cfg_opt_t * __export cfg_getopt(cfg_t *cfg, const char *name);
+cfg_opt_t * cfg_getopt(cfg_t *cfg, const char *name);
 
 /** Set an option (create an instance of an option).
  *
@@ -898,7 +900,7 @@ DLLIMPORT cfg_opt_t * __export cfg_getopt(cfg_t *cfg, const char *name);
  *
  * @return Returns a pointer to the value object.
  */
-DLLIMPORT cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
+cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
 
 /** Set a value of an integer option.
  *
@@ -908,7 +910,7 @@ DLLIMPORT cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_opt_setnint(cfg_opt_t *opt,
+void cfg_opt_setnint(cfg_opt_t *opt,
                                         long int value, unsigned int index);
 
 /** Set the value of an integer option given its name.
@@ -918,7 +920,7 @@ DLLIMPORT void __export cfg_opt_setnint(cfg_opt_t *opt,
  * @param value The value to set. If the option is a list (the CFGF_LIST flag
  * is set), only the first value (with index 0) is set.
  */
-DLLIMPORT void __export cfg_setint(cfg_t *cfg, const char *name,
+void cfg_setint(cfg_t *cfg, const char *name,
                                    long int value);
 
 /** Set a value of an integer option given its name and index.
@@ -930,7 +932,7 @@ DLLIMPORT void __export cfg_setint(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_setnint(cfg_t *cfg, const char *name,
+void cfg_setnint(cfg_t *cfg, const char *name,
                                     long int value, unsigned int index);
 
 /** Set a value of a floating point option.
@@ -941,7 +943,7 @@ DLLIMPORT void __export cfg_setnint(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_opt_setnfloat(cfg_opt_t *opt,
+void cfg_opt_setnfloat(cfg_opt_t *opt,
                                           double value, unsigned int index);
 
 /** Set the value of a floating point option given its name.
@@ -951,7 +953,7 @@ DLLIMPORT void __export cfg_opt_setnfloat(cfg_opt_t *opt,
  * @param value The value to set. If the option is a list (the CFGF_LIST flag
  * is set), only the first value (with index 0) is set.
  */
-DLLIMPORT void __export cfg_setfloat(cfg_t *cfg, const char *name,
+void cfg_setfloat(cfg_t *cfg, const char *name,
                                      double value);
 
 /** Set a value of a floating point option given its name and index.
@@ -963,7 +965,7 @@ DLLIMPORT void __export cfg_setfloat(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_setnfloat(cfg_t *cfg, const char *name,
+void cfg_setnfloat(cfg_t *cfg, const char *name,
                                       double value, unsigned int index);
 
 /** Set a value of a boolean option.
@@ -974,7 +976,7 @@ DLLIMPORT void __export cfg_setnfloat(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_opt_setnbool(cfg_opt_t *opt,
+void cfg_opt_setnbool(cfg_opt_t *opt,
                                          cfg_bool_t value, unsigned int index);
 
 /** Set the value of a boolean option given its name.
@@ -984,7 +986,7 @@ DLLIMPORT void __export cfg_opt_setnbool(cfg_opt_t *opt,
  * @param value The value to set. If the option is a list (the CFGF_LIST flag
  * is set), only the first value (with index 0) is set.
  */
-DLLIMPORT void __export cfg_setbool(cfg_t *cfg, const char *name,
+void cfg_setbool(cfg_t *cfg, const char *name,
                                     cfg_bool_t value);
 
 /** Set a value of a boolean option given its name and index.
@@ -996,7 +998,7 @@ DLLIMPORT void __export cfg_setbool(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_setnbool(cfg_t *cfg, const char *name,
+void cfg_setnbool(cfg_t *cfg, const char *name,
                                      cfg_bool_t value, unsigned int index);
 
 /** Set a value of a string option.
@@ -1008,7 +1010,7 @@ DLLIMPORT void __export cfg_setnbool(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_opt_setnstr(cfg_opt_t *opt,
+void cfg_opt_setnstr(cfg_opt_t *opt,
                                         const char *value, unsigned int index);
 
 /** Set the value of a string option given its name.
@@ -1019,7 +1021,7 @@ DLLIMPORT void __export cfg_opt_setnstr(cfg_opt_t *opt,
  * value is copied. Any previous string value is freed. If the option is a list
  * (the CFGF_LIST flag is set), only the first value (with index 0) is set.
  */
-DLLIMPORT void __export cfg_setstr(cfg_t *cfg, const char *name,
+void cfg_setstr(cfg_t *cfg, const char *name,
                                    const char *value);
 
 /** Set a value of a boolean option given its name and index.
@@ -1032,7 +1034,7 @@ DLLIMPORT void __export cfg_setstr(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-DLLIMPORT void __export cfg_setnstr(cfg_t *cfg, const char *name,
+void cfg_setnstr(cfg_t *cfg, const char *name,
                                     const char *value, unsigned int index);
 
 /** Set values for a list option. All existing values are replaced
@@ -1045,10 +1047,10 @@ DLLIMPORT void __export cfg_setnstr(cfg_t *cfg, const char *name,
  * option and the number of values must be equal to the nvalues
  * parameter.
  */
-DLLIMPORT void __export cfg_setlist(cfg_t *cfg, const char *name,
+void cfg_setlist(cfg_t *cfg, const char *name,
                                     unsigned int nvalues, ...);
 
-DLLIMPORT int __export cfg_numopts(cfg_opt_t *opts);
+int cfg_numopts(cfg_opt_t *opts);
 
 /** Add values for a list option. The new values are appended to any
  * current values in the list.
@@ -1060,7 +1062,7 @@ DLLIMPORT int __export cfg_numopts(cfg_opt_t *opts);
  * option and the number of values must be equal to the nvalues
  * parameter.
  */
-DLLIMPORT void __export cfg_addlist(cfg_t *cfg, const char *name,
+void cfg_addlist(cfg_t *cfg, const char *name,
                                     unsigned int nvalues, ...);
 
 /** Default value print function.
@@ -1075,14 +1077,14 @@ DLLIMPORT void __export cfg_addlist(cfg_t *cfg, const char *name,
  *
  * @see cfg_print, cfg_opt_print
  */
-DLLIMPORT void __export cfg_opt_nprint_var(cfg_opt_t *opt, unsigned int index,
+void cfg_opt_nprint_var(cfg_opt_t *opt, unsigned int index,
                                   FILE *fp);
 
 /** Print an option and its value to a file.
  * Same as cfg_opt_print, but with the indentation level specified.
  * @see cfg_opt_print
  */
-DLLIMPORT void __export cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent);
+void cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent);
 
 /** Print an option and its value to a file.
  *
@@ -1094,13 +1096,13 @@ DLLIMPORT void __export cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int inden
  *
  * @see cfg_print_func_t
  */
-DLLIMPORT void __export cfg_opt_print(cfg_opt_t *opt, FILE *fp);
+void cfg_opt_print(cfg_opt_t *opt, FILE *fp);
 
 /** Print the options and values to a file.
  * Same as cfg_print, but with the indentation level specified.
  * @see cfg_print
  */
-DLLIMPORT void __export cfg_print_indent(cfg_t *cfg, FILE *fp, int indent);
+void cfg_print_indent(cfg_t *cfg, FILE *fp, int indent);
 
 /** Print the options and values to a file.
  *
@@ -1115,7 +1117,7 @@ DLLIMPORT void __export cfg_print_indent(cfg_t *cfg, FILE *fp, int indent);
  *
  * @see cfg_print_func_t, cfg_set_print_func
  */
-DLLIMPORT void __export cfg_print(cfg_t *cfg, FILE *fp);
+void cfg_print(cfg_t *cfg, FILE *fp);
 
 /** Set a print callback function for an option.
  *
@@ -1124,7 +1126,7 @@ DLLIMPORT void __export cfg_print(cfg_t *cfg, FILE *fp);
  *
  * @see cfg_print_func_t
  */
-DLLIMPORT cfg_print_func_t __export cfg_opt_set_print_func(cfg_opt_t *opt,
+cfg_print_func_t cfg_opt_set_print_func(cfg_opt_t *opt,
                                                   cfg_print_func_t pf);
 
 /** Set a print callback function for an option given its name.
@@ -1135,7 +1137,7 @@ DLLIMPORT cfg_print_func_t __export cfg_opt_set_print_func(cfg_opt_t *opt,
  *
  * @see cfg_print_func_t
  */
-DLLIMPORT cfg_print_func_t __export cfg_set_print_func(cfg_t *cfg, const char *name,
+cfg_print_func_t cfg_set_print_func(cfg_t *cfg, const char *name,
                                               cfg_print_func_t pf);
 
 /** Register a validating callback function for an option.
@@ -1146,7 +1148,7 @@ DLLIMPORT cfg_print_func_t __export cfg_set_print_func(cfg_t *cfg, const char *n
  *
  * @see cfg_validate_callback_t
  */
-DLLIMPORT cfg_validate_callback_t __export cfg_set_validate_func(cfg_t *cfg,
+cfg_validate_callback_t cfg_set_validate_func(cfg_t *cfg,
                                                         const char *name,
                                                         cfg_validate_callback_t vf);
 
