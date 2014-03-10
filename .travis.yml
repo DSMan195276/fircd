@@ -5,7 +5,7 @@ compiler:
   - gcc
   
 install: 
-  - sudo apt-get install libconfuse-dev libconfuse-common libconfuse0 valgrind
+  - sudo apt-get install valgrind
   
 script:
   - make && make test
