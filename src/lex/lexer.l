@@ -223,6 +223,9 @@ static YY_BUFFER_STATE string_scan_state = 0;
 <<EOF>> {
              if (cfg_include_stack_ptr <= 0)
              {
+                 yy_buffer_stack_top = 0;
+                 free(yy_buffer_stack);
+                 yy_buffer_stack = NULL;
                  return EOF;
              }
              else
