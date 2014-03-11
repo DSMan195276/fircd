@@ -7,7 +7,7 @@ echo "--------------------"
 echo
 for t in $*; do
     valgrind --quiet --error-exitcode=1 \
-        --leak-check=full --show-leak-kinds=all ./test/${t}_test
+        --leak-check=full --show-leak-kinds=all ./test/bin/${t}_test
     let FAILURE+=$?
     echo
 done

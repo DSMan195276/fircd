@@ -2,3 +2,4 @@
 *.tar.gz
 fircd
 src/lex/*.c
+test/bin/

@@ -18,9 +18,9 @@ TESTS :=
 # rules for compiling them.
 define TEST_template =
 $(1).OBJ := $($(1).SRC:%.c=%.o)
-TEST_TESTS += ./test/$(1)_test
-./test/$(1)_test: ./test/test.o $$($(1).OBJ)
-	@echo " CCLD    ./test/$(1)_test"
+TEST_TESTS += ./test/bin/$(1)_test
+./test/bin/$(1)_test: ./test/test.o $$($(1).OBJ) | ./test/bin
+	@echo " CCLD    ./test/bin/$(1)_test"
 	$(Q)$(CC) $(LDFLAGS) ./test/test.o -o $$@ $$($(1).OBJ)
 endef
 
@@ -29,11 +29,17 @@ $(foreach test,$(TESTS),$(eval $(call TEST_template,$(test))))
 
 .PHONY: clean_tests run_tests
 
+test/bin:
+	@echo " MKDIR   ./test/bin"
+	$(Q)mkdir ./test/bin
+
 clean_tests:
 	@echo " RM      ./test/*.o"
 	$(Q)rm -f ./test/*.o
 	@echo " RM      $(TEST_TESTS)"
 	$(Q)rm -f $(TEST_TESTS)
+	@echo " RM      ./test/bin"
+	$(Q)rm -fr ./test/bin
 
 run_tests: ./test/test.o $(TEST_TESTS)
 	$(Q)./test/run_tests.sh $(TESTS)
