@@ -57,17 +57,18 @@ extern "C" {
 #define PACKAGE_VERSION "2.7"
 
 /** Fundamental option types */
-enum cfg_type_t {
-    CFGT_NONE,
-    CFGT_INT,     /**< integer */
-    CFGT_FLOAT,   /**< floating point number */
-    CFGT_STR,     /**< string */
-    CFGT_BOOL,    /**< boolean value */
-    CFGT_SEC,     /**< section */
-    CFGT_FUNC,    /**< function */
-    CFGT_PTR      /**< pointer to user-defined value */
-};
-typedef enum cfg_type_t cfg_type_t;
+    enum cfg_type_t {
+        CFGT_NONE,
+        CFGT_INT, /**< integer */
+        CFGT_FLOAT,
+                  /**< floating point number */
+        CFGT_STR, /**< string */
+        CFGT_BOOL,/**< boolean value */
+        CFGT_SEC, /**< section */
+        CFGT_FUNC,/**< function */
+        CFGT_PTR  /**< pointer to user-defined value */
+    };
+    typedef enum cfg_type_t cfg_type_t;
 
 /** Flags. */
 #define CFGF_NONE 0
@@ -88,13 +89,13 @@ typedef enum cfg_type_t cfg_type_t;
 #define CFG_FILE_ERROR -1
 #define CFG_PARSE_ERROR 1
 
-typedef union cfg_value_t cfg_value_t;
-typedef union cfg_simple_t cfg_simple_t;
-typedef struct cfg_opt_t cfg_opt_t;
-typedef struct cfg_t cfg_t;
-typedef struct cfg_defvalue_t cfg_defvalue_t;
-typedef int cfg_flag_t;
-typedef struct cfg_searchpath_t cfg_searchpath_t;
+    typedef union cfg_value_t cfg_value_t;
+    typedef union cfg_simple_t cfg_simple_t;
+    typedef struct cfg_opt_t cfg_opt_t;
+    typedef struct cfg_t cfg_t;
+    typedef struct cfg_defvalue_t cfg_defvalue_t;
+    typedef int cfg_flag_t;
+    typedef struct cfg_searchpath_t cfg_searchpath_t;
 
 /** Function prototype used by CFGT_FUNC options.
  *
@@ -121,8 +122,8 @@ typedef struct cfg_searchpath_t cfg_searchpath_t;
  *
  * @see CFG_FUNC
  */
-typedef int (*cfg_func_t)(cfg_t *cfg, cfg_opt_t *opt,
-                          int argc, const char **argv);
+    typedef int (*cfg_func_t) (cfg_t *cfg, cfg_opt_t *opt,
+                               int argc, const char **argv);
 
 /** Function prototype used by the cfg_print_ functions.
  *
@@ -144,7 +145,8 @@ typedef int (*cfg_func_t)(cfg_t *cfg, cfg_opt_t *opt,
  *
  * @see cfg_print, cfg_set_print_func
  */
-typedef void (*cfg_print_func_t)(cfg_opt_t *opt, unsigned int index, FILE *fp);
+    typedef void (*cfg_print_func_t) (cfg_opt_t *opt, unsigned int index,
+                                      FILE *fp);
 
 /** Value parsing callback prototype
  *
@@ -167,8 +169,8 @@ typedef void (*cfg_print_func_t)(cfg_opt_t *opt, unsigned int index, FILE *fp);
  * error, and the parsing is aborted. The callback function should notify the
  * error itself, for example by calling cfg_error().
  */
-typedef int (*cfg_callback_t)(cfg_t *cfg, cfg_opt_t *opt,
-                              const char *value, void *result);
+    typedef int (*cfg_callback_t) (cfg_t *cfg, cfg_opt_t *opt,
+                                   const char *value, void *result);
 
 /** Validating callback prototype
  *
@@ -183,7 +185,7 @@ typedef int (*cfg_callback_t)(cfg_t *cfg, cfg_opt_t *opt,
  *
  * @see cfg_set_validate_func
  */
-typedef int (*cfg_validate_callback_t)(cfg_t *cfg, cfg_opt_t *opt);
+    typedef int (*cfg_validate_callback_t) (cfg_t *cfg, cfg_opt_t *opt);
 
 /** User-defined memory release function for CFG_PTR values
  *
@@ -193,96 +195,104 @@ typedef int (*cfg_validate_callback_t)(cfg_t *cfg, cfg_opt_t *opt);
  * malloc(3), one can use the standard free(3) function here.
  *
  */
-typedef void (*cfg_free_func_t)(void *value);
+    typedef void (*cfg_free_func_t) (void *value);
 
 /** Boolean values. */
-typedef enum {cfg_false, cfg_true} cfg_bool_t;
+    typedef enum { cfg_false, cfg_true } cfg_bool_t;
 
 /** Error reporting function. */
-typedef void (*cfg_errfunc_t)(cfg_t *cfg, const char *fmt, va_list ap);
+    typedef void (*cfg_errfunc_t) (cfg_t *cfg, const char *fmt,
+                                   va_list ap);
 
 /** Data structure holding information about a "section". Sections can
  * be nested. A section has a list of options (strings, numbers,
  * booleans or other sections) grouped together.
  */
-struct cfg_t {
-    cfg_flag_t flags;       /**< Any flags passed to cfg_init() */
-    char *name;             /**< The name of this section, the root
+    struct cfg_t {
+        cfg_flag_t flags;   /**< Any flags passed to cfg_init() */
+        char *name;         /**< The name of this section, the root
                              * section returned from cfg_init() is
                              * always named "root" */
-    cfg_opt_t *opts;        /**< Array of options */
-    char *title;            /**< Optional title for this section, only
+        cfg_opt_t *opts;    /**< Array of options */
+        char *title;        /**< Optional title for this section, only
                              * set if CFGF_TITLE flag is set */
-    char *filename;         /**< Name of the file being parsed */
-    int line;               /**< Line number in the config file */
-    cfg_errfunc_t errfunc;  /**< This function (if set with
+        char *filename;     /**< Name of the file being parsed */
+        int line;           /**< Line number in the config file */
+        cfg_errfunc_t errfunc;
+                            /**< This function (if set with
                              * cfg_set_error_function) is called for
                              * any error message. */
-    cfg_searchpath_t *path; /**< Linked list of directories to search */
-};
+        cfg_searchpath_t *path;
+                            /**< Linked list of directories to search */
+    };
 
 /** Data structure holding the value of a fundamental option value.
  */
-union cfg_value_t {
-    long int number;        /**< integer value */
-    double fpnumber;        /**< floating point value */
-    cfg_bool_t boolean;     /**< boolean value */
-    char *string;           /**< string value */
-    cfg_t *section;         /**< section value */
-    void *ptr;              /**< user-defined value */
-};
+    union cfg_value_t {
+        long int number;    /**< integer value */
+        double fpnumber;    /**< floating point value */
+        cfg_bool_t boolean; /**< boolean value */
+        char *string;       /**< string value */
+        cfg_t *section;     /**< section value */
+        void *ptr;          /**< user-defined value */
+    };
 
 /** Data structure holding the pointer to a user provided variable
  *  defined with CFG_SIMPLE_*
  */
-union cfg_simple_t {
-    long int *number;
-    double *fpnumber;
-    cfg_bool_t *boolean;
-    char **string;
-    void **ptr;
-};
+    union cfg_simple_t {
+        long int *number;
+        double *fpnumber;
+        cfg_bool_t *boolean;
+        char **string;
+        void **ptr;
+    };
 
 /** Data structure holding the default value given by the
  *  initialization macros.
  */
-struct cfg_defvalue_t {
-    long int number;        /**< default integer value */
-    double fpnumber;        /**< default floating point value */
-    cfg_bool_t boolean;     /**< default boolean value */
-    char *string;           /**< default string value */
-    char *parsed;           /**< default value that is parsed by
+    struct cfg_defvalue_t {
+        long int number;    /**< default integer value */
+        double fpnumber;    /**< default floating point value */
+        cfg_bool_t boolean; /**< default boolean value */
+        char *string;       /**< default string value */
+        char *parsed;       /**< default value that is parsed by
                              * libConfuse, used for lists and
                              * functions */
-};
+    };
 
 /** Data structure holding information about an option. The value(s)
  * are stored as an array of fundamental values (strings, numbers,
  * etc).
  */
-struct cfg_opt_t {
-    char *name;             /**< The name of the option */
-    cfg_type_t type;        /**< Type of option */
-    unsigned int nvalues;   /**< Number of values parsed */
-    cfg_value_t **values;   /**< Array of found values */
-    cfg_flag_t flags;       /**< Flags */
-    cfg_opt_t *subopts;     /**< Suboptions (only applies to sections) */
-    cfg_defvalue_t def;     /**< Default value */
-    cfg_func_t func;        /**< Function callback for CFGT_FUNC options */
-    cfg_simple_t simple_value;     /**< Pointer to user-specified variable to
+    struct cfg_opt_t {
+        char *name;         /**< The name of the option */
+        cfg_type_t type;    /**< Type of option */
+        unsigned int nvalues;
+                            /**< Number of values parsed */
+        cfg_value_t **values;
+                            /**< Array of found values */
+        cfg_flag_t flags;   /**< Flags */
+        cfg_opt_t *subopts; /**< Suboptions (only applies to sections) */
+        cfg_defvalue_t def; /**< Default value */
+        cfg_func_t func;    /**< Function callback for CFGT_FUNC options */
+        cfg_simple_t simple_value; /**< Pointer to user-specified variable to
                              * store simple values (created with the
                              * CFG_SIMPLE_* initializers) */
-    cfg_callback_t parsecb; /**< Value parsing callback function */
-    cfg_validate_callback_t validcb; /**< Value validating callback function */
-    cfg_print_func_t pf;    /**< print callback function */
-    cfg_free_func_t freecb; /***< user-defined memory release function */
+        cfg_callback_t parsecb;
+                            /**< Value parsing callback function */
+        cfg_validate_callback_t validcb;
+                                     /**< Value validating callback function */
+        cfg_print_func_t pf;/**< print callback function */
+        cfg_free_func_t freecb;
+                            /***< user-defined memory release function */
 
-    unsigned int was_set :1;
-};
+        unsigned int was_set:1;
+    };
 
-extern const char confuse_copyright[];
-extern const char confuse_version[];
-extern const char confuse_author[];
+    extern const char confuse_copyright[];
+    extern const char confuse_version[];
+    extern const char confuse_author[];
 
 #define __CFG_STR(name, def, flags, svalue, cb) \
   {name,CFGT_STR,0,0,flags,0,{0,0,cfg_false,def,0},0,{.string=svalue},cb,0,0,0}
@@ -546,7 +556,7 @@ extern const char confuse_author[];
  * @return A configuration context structure. This pointer is passed
  * to almost all other functions as the first parameter.
  */
-cfg_t * cfg_init(cfg_opt_t *opts, cfg_flag_t flags);
+    cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags);
 
 /** Add a searchpath directory to the configuration context, the
  * const char* argument will be duplicated and then freed as part
@@ -564,7 +574,7 @@ cfg_t * cfg_init(cfg_opt_t *opts, cfg_flag_t flags);
  * @return On success, CFG_SUCCESS, on failure (which can only be
  * caused by a failed malloc()), CFG_PARSE_ERROR.
  */
-int cfg_add_searchpath(cfg_t *cfg, const char *dir);
+    int cfg_add_searchpath(cfg_t *cfg, const char *dir);
 
 /** Search the linked-list of cfg_searchpath_t for the specified
  * file.  If not NULL, the return value is freshly allocated and
@@ -577,8 +587,7 @@ int cfg_add_searchpath(cfg_t *cfg, const char *dir);
  * @return If the file is found on the searchpath then the full
  * path to the file is returned. If not found, NULL is returned.
  */
-char *cfg_searchpath(cfg_searchpath_t* path,
-					const char *file);
+    char *cfg_searchpath(cfg_searchpath_t *path, const char *file);
 
 /** Parse a configuration file. Tilde expansion is performed on the
  * filename before it is opened. After a configuration file has been
@@ -593,7 +602,7 @@ char *cfg_searchpath(cfg_searchpath_t* path,
  * errors, CFG_PARSE_ERROR is returned and cfg_error() was called with
  * a descriptive error message.
  */
-int cfg_parse(cfg_t *cfg, const char *filename);
+    int cfg_parse(cfg_t *cfg, const char *filename);
 
 /** Same as cfg_parse() above, but takes an already opened file as
  * argument. Reading begins at the current position. After parsing,
@@ -605,7 +614,7 @@ int cfg_parse(cfg_t *cfg, const char *filename);
  *
  * @see cfg_parse()
  */
-int cfg_parse_fp(cfg_t *cfg, FILE *fp);
+    int cfg_parse_fp(cfg_t *cfg, FILE *fp);
 
 /** Same as cfg_parse() above, but takes a character buffer as
  * argument.
@@ -615,37 +624,37 @@ int cfg_parse_fp(cfg_t *cfg, FILE *fp);
  *
  * @see cfg_parse()
  */
-int cfg_parse_buf(cfg_t *cfg, const char *buf);
+    int cfg_parse_buf(cfg_t *cfg, const char *buf);
 
 /** Free the memory allocated for the values of a given option. Only
  * the values are freed, not the option itself (it is freed by cfg_free()).
  *
  * @see cfg_free()
  */
-void cfg_free_value(cfg_opt_t *opt);
+    void cfg_free_value(cfg_opt_t *opt);
 
 /** Free a cfg_t context. All memory allocated by the cfg_t context
  * structure are freed, and can't be used in any further cfg_* calls.
  */
-void cfg_free(cfg_t *cfg);
+    void cfg_free(cfg_t *cfg);
 
 /** Install a user-defined error reporting function.
  * @return The old error reporting function is returned.
  */
-cfg_errfunc_t cfg_set_error_function(cfg_t *cfg,
-                                                        cfg_errfunc_t errfunc);
+    cfg_errfunc_t cfg_set_error_function(cfg_t *cfg,
+                                         cfg_errfunc_t errfunc);
 
 /** Show a parser error. Any user-defined error reporting function is called.
  * @see cfg_set_error_function
  */
-void cfg_error(cfg_t *cfg, const char *fmt, ...);
+    void cfg_error(cfg_t *cfg, const char *fmt, ...);
 
 /** Returns the value of an integer option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnint
  */
-signed long cfg_opt_getnint(cfg_opt_t *opt, unsigned int index);
+    signed long cfg_opt_getnint(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getint(), used for lists.
  * @param cfg The configuration file context.
@@ -653,8 +662,8 @@ signed long cfg_opt_getnint(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getint
  */
-long int cfg_getnint(cfg_t *cfg, const char *name,
-                                        unsigned int index);
+    long int cfg_getnint(cfg_t *cfg, const char *name,
+                         unsigned int index);
 
 /** Returns the value of an integer option. This is the same as
  * calling cfg_getnint with index 0.
@@ -665,14 +674,14 @@ long int cfg_getnint(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-long int cfg_getint(cfg_t *cfg, const char *name);
+    long int cfg_getint(cfg_t *cfg, const char *name);
 
 /** Returns the value of a floating point option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnfloat
  */
-double cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index);
+    double cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getfloat(), used for lists.
  * @param cfg The configuration file context.
@@ -680,8 +689,8 @@ double cfg_opt_getnfloat(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getfloat
  */
-double cfg_getnfloat(cfg_t *cfg, const char *name,
-                                        unsigned int index);
+    double cfg_getnfloat(cfg_t *cfg, const char *name,
+                         unsigned int index);
 
 /** Returns the value of a floating point option.
  * @param cfg The configuration file context.
@@ -691,14 +700,14 @@ double cfg_getnfloat(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-double cfg_getfloat(cfg_t *cfg, const char *name);
+    double cfg_getfloat(cfg_t *cfg, const char *name);
 
 /** Returns the value of a string option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnstr
  */
-char * cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index);
+    char *cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getstr(), used for lists.
  * @param cfg The configuration file context.
@@ -706,8 +715,7 @@ char * cfg_opt_getnstr(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getstr
  */
-char * cfg_getnstr(cfg_t *cfg, const char *name,
-                                      unsigned int index);
+    char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index);
 
 /** Returns the value of a string option.
  * @param cfg The configuration file context.
@@ -717,14 +725,14 @@ char * cfg_getnstr(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-char * cfg_getstr(cfg_t *cfg, const char *name);
+    char *cfg_getstr(cfg_t *cfg, const char *name);
 
 /** Returns the value of a boolean option, given a cfg_opt_t pointer.
  * @param opt The option structure (eg, as returned from cfg_getopt())
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnbool
  */
-cfg_bool_t cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index);
+    cfg_bool_t cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getbool(), used for lists.
  *
@@ -733,8 +741,8 @@ cfg_bool_t cfg_opt_getnbool(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getbool
  */
-cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name,
-                                           unsigned int index);
+    cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name,
+                            unsigned int index);
 
 /** Returns the value of a boolean option.
  * @param cfg The configuration file context.
@@ -744,11 +752,11 @@ cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name,
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name);
+    cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name);
 
 
-void * cfg_opt_getnptr(cfg_opt_t *opt, unsigned int index);
-void * cfg_getnptr(cfg_t *cfg, const char *name, unsigned int indx);
+    void *cfg_opt_getnptr(cfg_opt_t *opt, unsigned int index);
+    void *cfg_getnptr(cfg_t *cfg, const char *name, unsigned int indx);
 
 /** Returns the value of a user-defined option (void pointer).
  * @param cfg The configuration file context.
@@ -758,7 +766,7 @@ void * cfg_getnptr(cfg_t *cfg, const char *name, unsigned int indx);
  * corresponding cfg_opt_t structure is returned. It is an error to
  * try to get an option that isn't declared.
  */
-void * cfg_getptr(cfg_t *cfg, const char *name);
+    void *cfg_getptr(cfg_t *cfg, const char *name);
 
 
 /** Returns the value of a section option, given a cfg_opt_t pointer.
@@ -766,7 +774,7 @@ void * cfg_getptr(cfg_t *cfg, const char *name);
  * @param index Index of the value to get. Zero based.
  * @see cfg_getnsec
  */
-cfg_t * cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index);
+    cfg_t *cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index);
 
 /** Indexed version of cfg_getsec(), used for sections with the
  * CFGF_MULTI flag set.
@@ -776,8 +784,7 @@ cfg_t * cfg_opt_getnsec(cfg_opt_t *opt, unsigned int index);
  * @param index Index of the section to get. Zero based.
  * @see cfg_getsec
  */
-cfg_t * cfg_getnsec(cfg_t *cfg, const char *name,
-                                       unsigned int index);
+    cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index);
 
 /** Returns the value of a section option, given a cfg_opt_t pointer
  * and the title.
@@ -786,7 +793,7 @@ cfg_t * cfg_getnsec(cfg_t *cfg, const char *name,
  * have been set for this option.
  * @see cfg_gettsec
  */
-cfg_t * cfg_opt_gettsec(cfg_opt_t *opt, const char *title);
+    cfg_t *cfg_opt_gettsec(cfg_opt_t *opt, const char *title);
 
 /** Return a section given the title, used for section with the
  * CFGF_TITLE flag set.
@@ -797,8 +804,7 @@ cfg_t * cfg_opt_gettsec(cfg_opt_t *opt, const char *title);
  * have been set for this option.
  * @see cfg_getsec
  */
-cfg_t * cfg_gettsec(cfg_t *cfg, const char *name,
-                                       const char *title);
+    cfg_t *cfg_gettsec(cfg_t *cfg, const char *name, const char *title);
 
 /** Returns the value of a section option. The returned value is
  * another cfg_t structure that can be used in following calls to
@@ -810,14 +816,14 @@ cfg_t * cfg_gettsec(cfg_t *cfg, const char *name,
  * section without the CFGF_MULTI flag set. It is an error to try to
  * get a section that isn't declared.
  */
-cfg_t * cfg_getsec(cfg_t *cfg, const char *name);
+    cfg_t *cfg_getsec(cfg_t *cfg, const char *name);
 
 /** Return the number of values this option has. If no default value
  * is given for the option and no value was found in the config file,
  * 0 will be returned (ie, the option value is not set at all).
  * @param opt The option structure (eg, as returned from cfg_getopt())
  */
-unsigned int cfg_opt_size(cfg_opt_t *opt);
+    unsigned int cfg_opt_size(cfg_opt_t *opt);
 
 /** Return the number of values this option has. If no default value
  * is given for the option and no value was found in the config file,
@@ -831,7 +837,7 @@ unsigned int cfg_opt_size(cfg_opt_t *opt);
  * @param cfg The configuration file context.
  * @param name The name of the option.
  */
-unsigned int cfg_size(cfg_t *cfg, const char *name);
+    unsigned int cfg_size(cfg_t *cfg, const char *name);
 
 /** Return the title of a section.
  *
@@ -839,7 +845,7 @@ unsigned int cfg_size(cfg_t *cfg, const char *name);
  * @return Returns the title, or 0 if there is no title. This string
  * should not be modified.
  */
-const char * cfg_title(cfg_t *cfg);
+    const char *cfg_title(cfg_t *cfg);
 
 /** Return the name of a section.
  *
@@ -847,7 +853,7 @@ const char * cfg_title(cfg_t *cfg);
  * @return Returns the title, or 0 if there is no title. This string
  * should not be modified.
  */
-const char * cfg_name(cfg_t *cfg);
+    const char *cfg_name(cfg_t *cfg);
 
 /** Return the name of an option.
  *
@@ -855,15 +861,15 @@ const char * cfg_name(cfg_t *cfg);
  * @return Returns the title, or 0 if there is no title. This string
  * should not be modified.
  */
-const char * cfg_opt_name(cfg_opt_t *opt);
+    const char *cfg_opt_name(cfg_opt_t *opt);
 
 /** Predefined include-function. This function can be used in the
  * options passed to cfg_init() to specify a function for including
  * other configuration files in the parsing. For example:
  * CFG_FUNC("include", &cfg_include)
  */
-int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
-                                   const char **argv);
+    int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
+                    const char **argv);
 
 /** Does tilde expansion (~ -> $HOME) on the filename.
  * @return The expanded filename is returned. If a ~user was not
@@ -871,7 +877,7 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
  * dynamically allocated string is returned, which should be free()'d
  * by the caller.
  */
-char * cfg_tilde_expand(const char *filename);
+    char *cfg_tilde_expand(const char *filename);
 
 /** Parse a boolean option string. Accepted "true" values are "true",
  * "on" and "yes", and accepted "false" values are "false", "off" and
@@ -880,7 +886,7 @@ char * cfg_tilde_expand(const char *filename);
  * @return Returns 1 or 0 (true/false) if the string was parsed
  * correctly, or -1 if an error occurred.
  */
-int cfg_parse_boolean(const char *s);
+    int cfg_parse_boolean(const char *s);
 
 /** Return an option given it's name.
  *
@@ -890,7 +896,7 @@ int cfg_parse_boolean(const char *s);
  * @return Returns a pointer to the option. If the option isn't declared,
  * libConfuse will print an error message and return 0.
  */
-cfg_opt_t * cfg_getopt(cfg_t *cfg, const char *name);
+    cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name);
 
 /** Set an option (create an instance of an option).
  *
@@ -900,7 +906,7 @@ cfg_opt_t * cfg_getopt(cfg_t *cfg, const char *name);
  *
  * @return Returns a pointer to the value object.
  */
-cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
+    cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
 
 /** Set a value of an integer option.
  *
@@ -910,8 +916,8 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_opt_setnint(cfg_opt_t *opt,
-                                        long int value, unsigned int index);
+    void cfg_opt_setnint(cfg_opt_t *opt,
+                         long int value, unsigned int index);
 
 /** Set the value of an integer option given its name.
  *
@@ -920,8 +926,7 @@ void cfg_opt_setnint(cfg_opt_t *opt,
  * @param value The value to set. If the option is a list (the CFGF_LIST flag
  * is set), only the first value (with index 0) is set.
  */
-void cfg_setint(cfg_t *cfg, const char *name,
-                                   long int value);
+    void cfg_setint(cfg_t *cfg, const char *name, long int value);
 
 /** Set a value of an integer option given its name and index.
  *
@@ -932,8 +937,8 @@ void cfg_setint(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_setnint(cfg_t *cfg, const char *name,
-                                    long int value, unsigned int index);
+    void cfg_setnint(cfg_t *cfg, const char *name,
+                     long int value, unsigned int index);
 
 /** Set a value of a floating point option.
  *
@@ -943,8 +948,8 @@ void cfg_setnint(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_opt_setnfloat(cfg_opt_t *opt,
-                                          double value, unsigned int index);
+    void cfg_opt_setnfloat(cfg_opt_t *opt,
+                           double value, unsigned int index);
 
 /** Set the value of a floating point option given its name.
  *
@@ -953,8 +958,7 @@ void cfg_opt_setnfloat(cfg_opt_t *opt,
  * @param value The value to set. If the option is a list (the CFGF_LIST flag
  * is set), only the first value (with index 0) is set.
  */
-void cfg_setfloat(cfg_t *cfg, const char *name,
-                                     double value);
+    void cfg_setfloat(cfg_t *cfg, const char *name, double value);
 
 /** Set a value of a floating point option given its name and index.
  *
@@ -965,8 +969,8 @@ void cfg_setfloat(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_setnfloat(cfg_t *cfg, const char *name,
-                                      double value, unsigned int index);
+    void cfg_setnfloat(cfg_t *cfg, const char *name,
+                       double value, unsigned int index);
 
 /** Set a value of a boolean option.
  *
@@ -976,8 +980,8 @@ void cfg_setnfloat(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_opt_setnbool(cfg_opt_t *opt,
-                                         cfg_bool_t value, unsigned int index);
+    void cfg_opt_setnbool(cfg_opt_t *opt,
+                          cfg_bool_t value, unsigned int index);
 
 /** Set the value of a boolean option given its name.
  *
@@ -986,8 +990,7 @@ void cfg_opt_setnbool(cfg_opt_t *opt,
  * @param value The value to set. If the option is a list (the CFGF_LIST flag
  * is set), only the first value (with index 0) is set.
  */
-void cfg_setbool(cfg_t *cfg, const char *name,
-                                    cfg_bool_t value);
+    void cfg_setbool(cfg_t *cfg, const char *name, cfg_bool_t value);
 
 /** Set a value of a boolean option given its name and index.
  *
@@ -998,8 +1001,8 @@ void cfg_setbool(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_setnbool(cfg_t *cfg, const char *name,
-                                     cfg_bool_t value, unsigned int index);
+    void cfg_setnbool(cfg_t *cfg, const char *name,
+                      cfg_bool_t value, unsigned int index);
 
 /** Set a value of a string option.
  *
@@ -1010,8 +1013,8 @@ void cfg_setnbool(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_opt_setnstr(cfg_opt_t *opt,
-                                        const char *value, unsigned int index);
+    void cfg_opt_setnstr(cfg_opt_t *opt,
+                         const char *value, unsigned int index);
 
 /** Set the value of a string option given its name.
  *
@@ -1021,8 +1024,7 @@ void cfg_opt_setnstr(cfg_opt_t *opt,
  * value is copied. Any previous string value is freed. If the option is a list
  * (the CFGF_LIST flag is set), only the first value (with index 0) is set.
  */
-void cfg_setstr(cfg_t *cfg, const char *name,
-                                   const char *value);
+    void cfg_setstr(cfg_t *cfg, const char *name, const char *value);
 
 /** Set a value of a boolean option given its name and index.
  *
@@ -1034,8 +1036,8 @@ void cfg_setstr(cfg_t *cfg, const char *name,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_setnstr(cfg_t *cfg, const char *name,
-                                    const char *value, unsigned int index);
+    void cfg_setnstr(cfg_t *cfg, const char *name,
+                     const char *value, unsigned int index);
 
 /** Set values for a list option. All existing values are replaced
  * with the new ones.
@@ -1047,10 +1049,10 @@ void cfg_setnstr(cfg_t *cfg, const char *name,
  * option and the number of values must be equal to the nvalues
  * parameter.
  */
-void cfg_setlist(cfg_t *cfg, const char *name,
-                                    unsigned int nvalues, ...);
+    void cfg_setlist(cfg_t *cfg, const char *name,
+                     unsigned int nvalues, ...);
 
-int cfg_numopts(cfg_opt_t *opts);
+    int cfg_numopts(cfg_opt_t *opts);
 
 /** Add values for a list option. The new values are appended to any
  * current values in the list.
@@ -1062,8 +1064,8 @@ int cfg_numopts(cfg_opt_t *opts);
  * option and the number of values must be equal to the nvalues
  * parameter.
  */
-void cfg_addlist(cfg_t *cfg, const char *name,
-                                    unsigned int nvalues, ...);
+    void cfg_addlist(cfg_t *cfg, const char *name,
+                     unsigned int nvalues, ...);
 
 /** Default value print function.
  *
@@ -1077,14 +1079,14 @@ void cfg_addlist(cfg_t *cfg, const char *name,
  *
  * @see cfg_print, cfg_opt_print
  */
-void cfg_opt_nprint_var(cfg_opt_t *opt, unsigned int index,
-                                  FILE *fp);
+    void cfg_opt_nprint_var(cfg_opt_t *opt, unsigned int index,
+                            FILE *fp);
 
 /** Print an option and its value to a file.
  * Same as cfg_opt_print, but with the indentation level specified.
  * @see cfg_opt_print
  */
-void cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent);
+    void cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent);
 
 /** Print an option and its value to a file.
  *
@@ -1096,13 +1098,13 @@ void cfg_opt_print_indent(cfg_opt_t *opt, FILE *fp, int indent);
  *
  * @see cfg_print_func_t
  */
-void cfg_opt_print(cfg_opt_t *opt, FILE *fp);
+    void cfg_opt_print(cfg_opt_t *opt, FILE *fp);
 
 /** Print the options and values to a file.
  * Same as cfg_print, but with the indentation level specified.
  * @see cfg_print
  */
-void cfg_print_indent(cfg_t *cfg, FILE *fp, int indent);
+    void cfg_print_indent(cfg_t *cfg, FILE *fp, int indent);
 
 /** Print the options and values to a file.
  *
@@ -1117,7 +1119,7 @@ void cfg_print_indent(cfg_t *cfg, FILE *fp, int indent);
  *
  * @see cfg_print_func_t, cfg_set_print_func
  */
-void cfg_print(cfg_t *cfg, FILE *fp);
+    void cfg_print(cfg_t *cfg, FILE *fp);
 
 /** Set a print callback function for an option.
  *
@@ -1126,8 +1128,8 @@ void cfg_print(cfg_t *cfg, FILE *fp);
  *
  * @see cfg_print_func_t
  */
-cfg_print_func_t cfg_opt_set_print_func(cfg_opt_t *opt,
-                                                  cfg_print_func_t pf);
+    cfg_print_func_t cfg_opt_set_print_func(cfg_opt_t *opt,
+                                            cfg_print_func_t pf);
 
 /** Set a print callback function for an option given its name.
  *
@@ -1137,8 +1139,8 @@ cfg_print_func_t cfg_opt_set_print_func(cfg_opt_t *opt,
  *
  * @see cfg_print_func_t
  */
-cfg_print_func_t cfg_set_print_func(cfg_t *cfg, const char *name,
-                                              cfg_print_func_t pf);
+    cfg_print_func_t cfg_set_print_func(cfg_t *cfg, const char *name,
+                                        cfg_print_func_t pf);
 
 /** Register a validating callback function for an option.
  *
@@ -1148,21 +1150,16 @@ cfg_print_func_t cfg_set_print_func(cfg_t *cfg, const char *name,
  *
  * @see cfg_validate_callback_t
  */
-cfg_validate_callback_t cfg_set_validate_func(cfg_t *cfg,
-                                                        const char *name,
-                                                        cfg_validate_callback_t vf);
+    cfg_validate_callback_t cfg_set_validate_func(cfg_t *cfg,
+                                                  const char *name,
+                                                  cfg_validate_callback_t
+                                                  vf);
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif
-
 /** @example ftpconf.c
- */
-
-/** @example simple.c
- */
-
-/** @example reread.c
+ *//** @example simple.c
+ *//** @example reread.c
  */
