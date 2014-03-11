@@ -1,6 +1,6 @@
 
 # This defines the names of all the tests we should run
-TESTS :=
+TESTS := confuse
 
 # Definitions of the tests listed above
 # Each test is defined by a list of files that make it up
@@ -13,6 +13,7 @@ TESTS :=
 # More complex tests may require the use of more then just one .c file from
 # ./src, in which case all of them should be listed. Also possible is having
 # more the one test program per ./src file.
+confuse.SRC := ./test/confuse_test.c ./src/confuse.c ./src/lex/lexer.c
 
 # This template generates a list of the outputted test executables, as well as
 # rules for compiling them.
