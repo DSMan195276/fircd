@@ -1257,10 +1257,11 @@ static void cfg_free_opt_array(cfg_opt_t *opts)
 
 static void cfg_free_searchpath(cfg_searchpath_t* p)
 {
-  if (p)
-    {
-      cfg_free_searchpath(p->next);
-      free(p);
+    cfg_searchpath_t *s, *tmp;
+    for (s = p; s != NULL; s = tmp) {
+        tmp = s->next;
+        free(s->dir);
+        free(s);
     }
 }
 
