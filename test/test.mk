@@ -17,7 +17,7 @@ confuse.SRC := ./test/confuse_test.c ./src/confuse.c ./src/lex/lexer.c
 
 # This template generates a list of the outputted test executables, as well as
 # rules for compiling them.
-define TEST_template =
+define TEST_template
 $(1).OBJ := $($(1).SRC:%.c=%.o)
 TEST_TESTS += ./test/bin/$(1)_test
 ./test/bin/$(1)_test: ./test/test.o $$($(1).OBJ) | ./test/bin
