@@ -5,9 +5,11 @@ let FAILURE=0
 echo " STARTING TESTS"
 echo "--------------------"
 echo
+echo "Valgrind version: $(valgrind --version)"
+echo
 for t in $*; do
     valgrind --quiet --error-exitcode=1 \
-        --leak-check=full --show-leak-kinds=all ./test/bin/${t}_test
+        --leak-check=full --show-possibly-lost=yes --show-reachable=yes ./test/bin/${t}_test
     let FAILURE+=$?
     echo
 done
