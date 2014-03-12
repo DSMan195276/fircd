@@ -599,7 +599,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
                 cfg->filename ? strdup(cfg->filename) : 0;
             val->section->line = cfg->line;
             val->section->errfunc = cfg->errfunc;
-            val->section->title = value;
+            val->section->title = strdup(value);
         }
         if (!is_set(CFGF_DEFINIT, opt->flags))
             cfg_init_defaults(val->section);
@@ -642,6 +642,22 @@ struct cfg_searchpath_t {
     char *dir;               /**< directory to search */
     cfg_searchpath_t *next;  /**< next in list */
 };
+
+static cfg_searchpath_t *cfg_copy_path(cfg_t *cfg)
+{
+    cfg_searchpath_t *copy_head = NULL, *cur, **cpy_cur;
+
+    cpy_cur = &copy_head;
+
+    for (cur = cfg->path; cur != NULL; cur = cur->next) {
+        *cpy_cur = malloc(sizeof(cfg_searchpath_t));
+        memset(*cpy_cur, 0, sizeof(cfg_searchpath_t));
+        (*cpy_cur)->dir = strdup(cur->dir);
+        cpy_cur = &((*cpy_cur)->next);
+    }
+
+    return copy_head;
+}
 
 /* prepend a new cfg_searchpath_t to the linked list */
 
@@ -726,6 +742,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
     cfg_opt_t funcopt = CFG_STR(0, 0, 0);
     int num_values = 0;         /* number of values found for a list option */
     int rc;
+    int ret = 0;
 
     if (force_state != -1)
         state = force_state;
@@ -737,15 +754,18 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
 
         if (tok == 0) {
             /* lexer.l should have called cfg_error */
-            return STATE_ERROR;
+            ret = STATE_ERROR;
+            goto cleanup;
         }
 
         if (tok == EOF) {
             if (state != 0) {
                 cfg_error(cfg, _("premature end of file"));
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
-            return STATE_EOF;
+            ret = STATE_EOF;
+            goto cleanup;
         }
 
         switch (state) {
@@ -753,17 +773,22 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
             if (tok == '}') {
                 if (level == 0) {
                     cfg_error(cfg, _("unexpected closing brace"));
-                    return STATE_ERROR;
+                    ret = STATE_ERROR;
+                    goto cleanup;
                 }
-                return STATE_EOF;
+                ret = STATE_EOF;
+                goto cleanup;
             }
             if (tok != CFGT_STR) {
                 cfg_error(cfg, _("unexpected token '%s'"), cfg_yylval);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
             opt = cfg_getopt(cfg, cfg_yylval);
-            if (opt == 0)
-                return STATE_ERROR;
+            if (opt == 0) {
+                ret = STATE_ERROR;
+                goto cleanup;
+            }
             if (opt->type == CFGT_SEC) {
                 if (is_set(CFGF_TITLE, opt->flags))
                     state = 6;
@@ -782,7 +807,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
                               _
                               ("attempt to append to non-list option '%s'"),
                               opt->name);
-                    return STATE_ERROR;
+                    ret = STATE_ERROR;
+                    goto cleanup;
                 }
                 /* Even if the reset flag was set by
                  * cfg_init_defaults, appending to the defaults
@@ -796,7 +822,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
             } else {
                 cfg_error(cfg, _("missing equal sign after option '%s'"),
                           opt->name);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
             if (is_set(CFGF_LIST, opt->flags)) {
                 state = 3;
@@ -817,13 +844,18 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
 
             if (tok != CFGT_STR) {
                 cfg_error(cfg, _("unexpected token '%s'"), cfg_yylval);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
 
-            if (cfg_setopt(cfg, opt, cfg_yylval) == 0)
-                return STATE_ERROR;
-            if (opt->validcb && (*opt->validcb) (cfg, opt) != 0)
-                return STATE_ERROR;
+            if (cfg_setopt(cfg, opt, cfg_yylval) == 0) {
+                ret = STATE_ERROR;
+                goto cleanup;
+            }
+            if (opt->validcb && (*opt->validcb) (cfg, opt) != 0) {
+                ret = STATE_ERROR;
+                goto cleanup;
+            }
             if (is_set(CFGF_LIST, opt->flags)) {
                 ++num_values;
                 state = 4;
@@ -835,13 +867,18 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
             if (tok != '{') {
                 if (tok != CFGT_STR) {
                     cfg_error(cfg, _("unexpected token '%s'"), cfg_yylval);
-                    return STATE_ERROR;
+                    ret = STATE_ERROR;
+                    goto cleanup;
                 }
 
-                if (cfg_setopt(cfg, opt, cfg_yylval) == 0)
-                    return STATE_ERROR;
-                if (opt->validcb && (*opt->validcb) (cfg, opt) != 0)
-                    return STATE_ERROR;
+                if (cfg_setopt(cfg, opt, cfg_yylval) == 0) {
+                    ret = STATE_ERROR;
+                    goto cleanup;
+                }
+                if (opt->validcb && (*opt->validcb) (cfg, opt) != 0) {
+                    ret = STATE_ERROR;
+                    goto cleanup;
+                }
                 ++num_values;
                 state = 0;
             } else
@@ -854,11 +891,14 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
                 state = 2;
             else if (tok == '}') {
                 state = 0;
-                if (opt->validcb && (*opt->validcb) (cfg, opt) != 0)
-                    return STATE_ERROR;
+                if (opt->validcb && (*opt->validcb) (cfg, opt) != 0) {
+                    ret = STATE_ERROR;
+                    goto cleanup;
+                }
             } else {
                 cfg_error(cfg, _("unexpected token '%s'"), cfg_yylval);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
             break;
 
@@ -866,23 +906,31 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
             if (tok != '{') {
                 cfg_error(cfg, _("missing opening brace for section '%s'"),
                           opt->name);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
 
             val = cfg_setopt(cfg, opt, opttitle);
+            free(opttitle);
             opttitle = 0;
-            if (!val)
-                return STATE_ERROR;
+            if (!val) {
+                ret = STATE_ERROR;
+                goto cleanup;
+            }
 
-            val->section->path = cfg->path;
+            val->section->path = cfg_copy_path(cfg);
             val->section->line = cfg->line;
             val->section->errfunc = cfg->errfunc;
             rc = cfg_parse_internal(val->section, level + 1, -1, 0);
             cfg->line = val->section->line;
-            if (rc != STATE_EOF)
-                return STATE_ERROR;
-            if (opt->validcb && (*opt->validcb) (cfg, opt) != 0)
-                return STATE_ERROR;
+            if (rc != STATE_EOF) {
+                ret = STATE_ERROR;
+                goto cleanup;
+            }
+            if (opt->validcb && (*opt->validcb) (cfg, opt) != 0) {
+                ret = STATE_ERROR;
+                goto cleanup;
+            }
             state = 0;
             break;
 
@@ -890,7 +938,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
             if (tok != CFGT_STR) {
                 cfg_error(cfg, _("missing title for section '%s'"),
                           opt->name);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             } else
                 opttitle = strdup(cfg_yylval);
             state = 5;
@@ -900,7 +949,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
             if (tok != '(') {
                 cfg_error(cfg, _("missing parenthesis for function '%s'"),
                           opt->name);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
             state = 8;
             break;
@@ -908,8 +958,10 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
         case 8:                /* expecting a function parameter or a closing paren */
             if (tok == ')') {
                 int ret = call_function(cfg, opt, &funcopt);
-                if (ret != 0)
-                    return STATE_ERROR;
+                if (ret != 0) {
+                    ret = STATE_ERROR;
+                    goto cleanup;
+                }
                 state = 0;
             } else if (tok == CFGT_STR) {
                 val = cfg_addval(&funcopt);
@@ -918,22 +970,26 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
             } else {
                 cfg_error(cfg, _("syntax error in call of function '%s'"),
                           opt->name);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
             break;
 
         case 9:                /* expecting a comma in a function or a closing paren */
             if (tok == ')') {
                 int ret = call_function(cfg, opt, &funcopt);
-                if (ret != 0)
-                    return STATE_ERROR;
+                if (ret != 0) {
+                    ret = STATE_ERROR;
+                    goto cleanup;
+                }
                 state = 0;
             } else if (tok == ',')
                 state = 8;
             else {
                 cfg_error(cfg, _("syntax error in call of function '%s'"),
                           opt->name);
-                return STATE_ERROR;
+                ret = STATE_ERROR;
+                goto cleanup;
             }
             break;
 
@@ -943,7 +999,13 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
         }
     }
 
-    return STATE_EOF;
+    ret = STATE_EOF;
+
+cleanup:
+    if (opttitle)
+        free(opttitle);
+
+    return ret;
 }
 
 int cfg_parse_fp(cfg_t *cfg, FILE *fp)
