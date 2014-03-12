@@ -223,9 +223,6 @@ static YY_BUFFER_STATE string_scan_state = 0;
 <<EOF>> {
              if (cfg_include_stack_ptr <= 0)
              {
-                 yy_buffer_stack_top = 0;
-                 free(yy_buffer_stack);
-                 yy_buffer_stack = NULL;
                  return EOF;
              }
              else
@@ -272,6 +269,13 @@ $\{[^}]*\} {
 . /* eat any non-matching characters */
 
 %%
+
+void cfg_cleanup_buffer(void)
+{
+     yy_buffer_stack_top = 0;
+     free(yy_buffer_stack);
+     yy_buffer_stack = NULL;
+}
 
 void cfg_dummy_function(void)
 {
@@ -357,6 +361,8 @@ void cfg_scan_string_end(void)
     cfg_qstring = 0;
     qstring_index = qstring_len = 0;
     string_scan_state = 0;
+
+    cfg_cleanup_buffer();
 }
 
 static YY_BUFFER_STATE pre_fp_scan_state;
@@ -379,4 +385,6 @@ void cfg_scan_fp_end(void)
     free(cfg_qstring);
     cfg_qstring = 0;
     qstring_index = qstring_len = 0;
+
+    cfg_cleanup_buffer();
 }
