@@ -93,6 +93,14 @@ int strcasecmp(const char *s1, const char *s2)
     return 0;
 }
 
+char *sstrdup(const char *s)
+{
+    if (s)
+        return strdup(s);
+    else
+        return NULL;
+}
+
 cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
 {
     unsigned int i;
@@ -599,7 +607,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
                 cfg->filename ? strdup(cfg->filename) : 0;
             val->section->line = cfg->line;
             val->section->errfunc = cfg->errfunc;
-            val->section->title = strdup(value);
+            val->section->title = sstrdup(value);
         }
         if (!is_set(CFGF_DEFINIT, opt->flags))
             cfg_init_defaults(val->section);
@@ -957,8 +965,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
 
         case 8:                /* expecting a function parameter or a closing paren */
             if (tok == ')') {
-                int ret = call_function(cfg, opt, &funcopt);
-                if (ret != 0) {
+                int retu = call_function(cfg, opt, &funcopt);
+                if (retu != 0) {
                     ret = STATE_ERROR;
                     goto cleanup;
                 }
@@ -977,8 +985,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
 
         case 9:                /* expecting a comma in a function or a closing paren */
             if (tok == ')') {
-                int ret = call_function(cfg, opt, &funcopt);
-                if (ret != 0) {
+                int retu = call_function(cfg, opt, &funcopt);
+                if (retu != 0) {
                     ret = STATE_ERROR;
                     goto cleanup;
                 }
