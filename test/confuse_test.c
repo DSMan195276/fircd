@@ -16,13 +16,18 @@
 #include "test.h"
 #include "confuse.h"
 
-cfg_opt_t ab_sec_opts[] = {
+static void suppress_errors(cfg_t *cfg, const char *fmt, va_list ap)
+{
+
+}
+
+static cfg_opt_t ab_sec_opts[] = {
     CFG_INT("a", 1, CFGF_NONE),
     CFG_INT("b", 2, CFGF_NONE),
     CFG_END()
 };
 
-cfg_opt_t ab_opts[] = {
+static cfg_opt_t ab_opts[] = {
     CFG_SEC("sec", ab_sec_opts, CFGF_MULTI | CFGF_TITLE),
     CFG_FUNC("include", &cfg_include),
     CFG_END()
@@ -218,12 +223,87 @@ int section_title_dupes(void)
     cfg = cfg_init(opts_no_dupes, CFGF_NONE);
     ret += TEST_ASSERT(cfg);
 
+    cfg_set_error_function(cfg, suppress_errors);
+
     rc = cfg_parse_buf(cfg, config_data);
     ret += TEST_ASSERT(rc == CFG_PARSE_ERROR);
 
     cfg_free(cfg);
 
     return ret;
+}
+
+int single_title_sections(void)
+{
+    int ret = 0;
+
+    cfg_opt_t root_opts[] = {
+        CFG_END()
+    };
+
+    cfg_opt_t opts[] = {
+        CFG_SEC("root", root_opts, CFGF_TITLE),
+        CFG_END()
+    };
+
+    cfg_t *cfg = cfg_init(opts, CFGF_NONE);
+
+    ret += TEST_ASSERT(cfg);
+
+    cfg_free(cfg);
+
+    return ret;
+}
+
+static int func_ret = 0;
+static int func_alias_called = 0;
+
+static int func_alias(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
+{
+    func_alias_called = 1;
+
+    func_ret += TEST_ASSERT(cfg);
+    func_ret += TEST_ASSERT(opt);
+    func_ret += TEST_ASSERT(strcmp(opt->name, "alias") == 0);
+    func_ret += TEST_ASSERT(opt->type == CFGT_FUNC);
+    func_ret += TEST_ASSERT(argv != 0);
+    func_ret += TEST_ASSERT(strcmp(argv[0], "ll") == 0);
+    func_ret += TEST_ASSERT(strcmp(argv[1], "ls -l") == 0);
+
+    if (argc != 2)
+        return -1;
+
+    return 0;
+}
+
+int suite_func(void)
+{
+    cfg_opt_t opts[] = {
+        CFG_FUNC("alias", func_alias),
+        CFG_END()
+    };
+
+    const char *buf;
+    cfg_t *cfg = cfg_init(opts, 0);
+
+    cfg_set_error_function(cfg, suppress_errors);
+
+    func_alias_called = 0;
+    buf = "alias(ll, 'ls -l')";
+    func_ret += TEST_ASSERT(cfg_parse_buf(cfg, buf) == CFG_SUCCESS);
+    func_ret += TEST_ASSERT(func_alias_called == 1);
+
+    func_alias_called = 0;
+    buf = "alias(ll, 'ls -l', 2)";
+    func_ret += TEST_ASSERT(cfg_parse_buf(cfg, buf) == CFG_PARSE_ERROR);
+    func_ret += TEST_ASSERT(func_alias_called == 1);
+
+    buf = "unalias(ll, 'ls -l')";
+    func_ret += TEST_ASSERT(cfg_parse_buf(cfg, buf) == CFG_PARSE_ERROR);
+
+    cfg_free(cfg);
+
+    return func_ret;
 }
 
 int main()
@@ -235,6 +315,8 @@ int main()
         { quote_before_print, "Quote before print" },
         { searchpath, "Search path" },
         { section_title_dupes, "Section title dupes" },
+        { single_title_sections, "Single title sections" },
+        { suite_func, "Suite func" },
     };
 
     ret = run_tests("confuse", tests, sizeof(tests) / sizeof(tests[0]));
