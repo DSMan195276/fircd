@@ -94,7 +94,7 @@ void channel_remove_files (struct channel *chan)
     rmdir(chan->name);
 }
 
-static void channel_write_raw(struct channel *chan, const char *msg)
+static void channel_write_raw_timestamp(struct channel *chan)
 {
     time_t cur_time;
     struct tm *tmp;
@@ -105,43 +105,29 @@ static void channel_write_raw(struct channel *chan, const char *msg)
 
     len = strftime(time_buf, sizeof(time_buf), "%F %H-%M-%S:", tmp);
     write(chan->rawfd, time_buf, len);
-    write(chan->rawfd, msg, strlen(msg));
-}
-
-static void channel_write_out(struct channel *chan, const char *msg)
-{
-    write(chan->outfd, msg, strlen(msg));
 }
 
 static void channel_write_msg(struct channel *chan, const char *user, const char *line)
 {
-    char *msg;
+    const char *format = " <%s> : %s\n";
 
-    msg = alloc_sprintf(" <%s> : %s\n", user, line);
-    DEBUG_PRINT("Writing msg: %s", msg);
-    write(chan->msgsfd, msg, strlen(msg));
-    channel_write_out(chan, msg);
-    free(msg);
+    DEBUG_PRINT("Writing msg: %s: %s", user, line);
+    fdprintf(chan->msgsfd, format, user, line);
+    fdprintf(chan->outfd, format, user, line);
 
-    msg = alloc_sprintf("MSG %s: %s\n", user, line);
-    channel_write_raw(chan, msg);
-    free(msg);
+    channel_write_raw_timestamp(chan);
+    fdprintf(chan->rawfd, "MSG %s: %s\n", user, line);
 }
 
 static void channel_write_topic(struct channel *chan)
 {
-    char *msg;
-
     ftruncate(chan->topicfd, 0);
     lseek(chan->topicfd, 0, SEEK_SET);
 
     if (chan->topic_user)
-        msg = alloc_sprintf("%s: \"%s\"\n", chan->topic_user, chan->topic);
+        fdprintf(chan->topicfd, "%s: \"%s\"\n", chan->topic_user, chan->topic);
     else
-        msg = alloc_sprintf("\"%s\"\n", chan->topic);
-
-    write(chan->topicfd, msg, strlen(msg));
-    free(msg);
+        fdprintf(chan->topicfd, "\"%s\"\n", chan->topic);
 }
 
 static void channel_write_users(struct channel *chan)
@@ -183,8 +169,6 @@ void channel_handle_input (struct channel *chan, fd_set *infd, fd_set *outfd)
 
 void channel_new_topic (struct channel *chan, const char *user, const char *topic)
 {
-    char *msg;
-
     if (chan->topic)
         free(chan->topic);
     if (chan->topic_user)
@@ -197,19 +181,16 @@ void channel_new_topic (struct channel *chan, const char *user, const char *topi
 
     channel_write_topic(chan);
 
+    channel_write_raw_timestamp(chan);
     if (user)
-        msg = alloc_sprintf("TOPIC %s:%s\n", user, topic);
+        fdprintf(chan->rawfd, "TOPIC %s:%s\n", user, topic);
     else
-        msg = alloc_sprintf("TOPIC :%s\n", topic);
-    channel_write_raw(chan, msg);
-    free(msg);
+        fdprintf(chan->rawfd, "TOPIC :%s\n", topic);
 
     if (user)
-        msg = alloc_sprintf("%s set the topic to %s\n", user, topic);
+        fdprintf(chan->outfd, "%s set the topic to %s\n", user, topic);
     else
-        msg = alloc_sprintf("Topic is %s\n", topic);
-    channel_write_out(chan, msg);
-    free(msg);
+        fdprintf(chan->outfd, "Topic is %s\n", topic);
 }
 
 void channel_new_message (struct channel *chan, const char *user, const char *line)
@@ -247,16 +228,12 @@ void channel_user_online(struct channel *chan, const struct irc_user *user_cpy)
 
 void channel_user_join(struct channel *chan, const struct irc_user *user_cpy)
 {
-    char *msg;
     channel_user_online(chan, user_cpy);
 
-    msg = alloc_sprintf("join > %s\n", user_cpy->nick);
-    channel_write_out(chan, msg);
-    free(msg);
+    fdprintf(chan->outfd, "join > %s\n", user_cpy->nick);
 
-    msg = alloc_sprintf("JOIN %s\n", user_cpy->nick);
-    channel_write_raw(chan, msg);
-    free(msg);
+    channel_write_raw_timestamp(chan);
+    fdprintf(chan->rawfd, "JOIN %s\n", user_cpy->nick);
 }
 
 static int try_remove_user (struct channel *chan, const char *nick)
@@ -285,39 +262,31 @@ static int try_remove_user (struct channel *chan, const char *nick)
 
 void channel_user_part (struct channel *chan, const char *nick)
 {
-    char *msg;
-
     if (!try_remove_user(chan, nick))
         return;
 
     channel_write_users(chan);
 
-    msg = alloc_sprintf("part > %s\n", nick);
-    channel_write_out(chan, msg);
-    free(msg);
+    fdprintf(chan->outfd, "part > %s\n", nick);
 
-    msg = alloc_sprintf("PART %s\n", nick);
-    channel_write_raw(chan, msg);
-    free(msg);
+    channel_write_raw_timestamp(chan);
+    fdprintf(chan->rawfd, "PART %s\n", nick);
+
     return ;
 }
 
 void channel_user_quit (struct channel *chan, const char *nick)
 {
-    char *msg;
-
     if (!try_remove_user(chan, nick))
         return;
 
     channel_write_users(chan);
 
-    msg = alloc_sprintf("quit < %s\n", nick);
-    channel_write_out(chan, msg);
-    free(msg);
+    fdprintf(chan->outfd, "quit < %s\n", nick);
 
-    msg = alloc_sprintf("QUIT %s\n", nick);
-    channel_write_raw(chan, msg);
-    free(msg);
+    channel_write_raw_timestamp(chan);
+    fdprintf(chan->rawfd, "QUIT %s\n", nick);
+
     return ;
 }
 
