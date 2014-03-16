@@ -18,7 +18,7 @@
 #include "config.h"
 #include "buf.h"
 
-static char *valloc_sprintf (const char *format, va_list lst)
+char *alloc_sprintfv (const char *format, va_list lst)
 {
     size_t size = vsnprintf(NULL, 0, format, lst) + 1;
     char *buf = malloc(size);
@@ -38,7 +38,7 @@ char *alloc_sprintf (const char *format, ...)
     va_list lst;
 
     va_start(lst, format);
-    ret = valloc_sprintf(format, lst);
+    ret = alloc_sprintfv(format, lst);
     va_end(lst);
 
     return ret;
