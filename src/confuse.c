@@ -56,20 +56,6 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
 #define STATE_EOF -1
 #define STATE_ERROR 1
 
-static char *strndup(const char *s, size_t n)
-{
-    char *r;
-
-    if (s == 0)
-        return 0;
-
-    r = malloc(n + 1);
-    assert(r);
-    strncpy(r, s, n);
-    r[n] = 0;
-    return r;
-}
-
 int strcasecmp(const char *s1, const char *s2)
 {
     assert(s1);
