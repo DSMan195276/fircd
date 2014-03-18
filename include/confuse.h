@@ -295,9 +295,9 @@ extern "C" {
     extern const char confuse_author[];
 
 #define __CFG_STR(name, def, flags, svalue, cb) \
-  {name,CFGT_STR,0,0,flags,0,{0,0,cfg_false,def,0},0,{.string=svalue},cb,0,0,0}
+  {name,CFGT_STR,0,0,flags,0,{0,0,cfg_false,def,0},0,{.string=svalue},cb,0,0,0,0}
 #define __CFG_STR_LIST(name, def, flags, svalue, cb) \
-  {name,CFGT_STR,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.string=svalue},cb,0,0,0}
+  {name,CFGT_STR,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.string=svalue},cb,0,0,0,0}
 
 /** Initialize a string option
  */
@@ -376,9 +376,9 @@ extern "C" {
 
 
 #define __CFG_INT(name, def, flags, svalue, cb) \
-  {name,CFGT_INT,0,0,flags,0,{def,0,cfg_false,0,0},0,{.number=svalue},cb,0,0,0}
+  {name,CFGT_INT,0,0,flags,0,{def,0,cfg_false,0,0},0,{.number=svalue},cb,0,0,0,0}
 #define __CFG_INT_LIST(name, def, flags, svalue, cb) \
-  {name,CFGT_INT,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.number=svalue},cb,0,0,0}
+  {name,CFGT_INT,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.number=svalue},cb,0,0,0,0}
 
 /** Initialize an integer option
  */
@@ -412,9 +412,9 @@ extern "C" {
 
 
 #define __CFG_FLOAT(name, def, flags, svalue, cb) \
-  {name,CFGT_FLOAT,0,0,flags,0,{0,def,cfg_false,0,0},0,{.fpnumber=svalue},cb,0,0,0}
+  {name,CFGT_FLOAT,0,0,flags,0,{0,def,cfg_false,0,0},0,{.fpnumber=svalue},cb,0,0,0,0}
 #define __CFG_FLOAT_LIST(name, def, flags, svalue, cb) \
-  {name,CFGT_FLOAT,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.fpnumber=svalue},cb,0,0,0}
+  {name,CFGT_FLOAT,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.fpnumber=svalue},cb,0,0,0,0}
 
 /** Initialize a floating point option
  */
@@ -445,9 +445,9 @@ extern "C" {
 
 
 #define __CFG_BOOL(name, def, flags, svalue, cb) \
-  {name,CFGT_BOOL,0,0,flags,0,{0,0,def,0,0},0,{.boolean=svalue},cb,0,0,0}
+  {name,CFGT_BOOL,0,0,flags,0,{0,0,def,0,0},0,{.boolean=svalue},cb,0,0,0,0}
 #define __CFG_BOOL_LIST(name, def, flags, svalue, cb) \
-  {name,CFGT_BOOL,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.boolean=svalue},cb,0,0,0}
+  {name,CFGT_BOOL,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.boolean=svalue},cb,0,0,0,0}
 
 /** Initialize a boolean option
  */
@@ -489,7 +489,7 @@ extern "C" {
  *
  */
 #define CFG_SEC(name, opts, flags) \
-  {name,CFGT_SEC,0,0,flags,opts,{0,0,cfg_false,0,0},0,{0},0,0,0,0}
+  {name,CFGT_SEC,0,0,flags,opts,{0,0,cfg_false,0,0},0,{0},0,0,0,0,0}
 
 
 
@@ -500,13 +500,13 @@ extern "C" {
  * @see cfg_func_t
  */
 #define CFG_FUNC(name, func) \
-  {name,CFGT_FUNC,0,0,CFGF_NONE,0,{0,0,cfg_false,0,0},func,{0},0,0,0,0}
+  {name,CFGT_FUNC,0,0,CFGF_NONE,0,{0,0,cfg_false,0,0},func,{0},0,0,0,0,0}
 
 
 #define __CFG_PTR(name, def, flags, svalue, parsecb, freecb) \
-  {name,CFGT_PTR,0,0,flags,0,{0,0,cfg_false,0,def},0,{.ptr=svalue},parsecb,0,0,freecb}
+  {name,CFGT_PTR,0,0,flags,0,{0,0,cfg_false,0,def},0,{.ptr=svalue},parsecb,0,0,freecb,0}
 #define __CFG_PTR_LIST(name, def, flags, svalue, parsecb, freecb) \
-  {name,CFGT_PTR,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.ptr=svalue},parsecb,0,0,freecb}
+  {name,CFGT_PTR,0,0,flags | CFGF_LIST,0,{0,0,cfg_false,0,def},0,{.ptr=svalue},parsecb,0,0,freecb,0}
 
 /** Initialize a user-defined option
  *
@@ -536,7 +536,7 @@ extern "C" {
  * the option list.
  */
 #define CFG_END() \
-   {0,CFGT_NONE,0,0,CFGF_NONE,0,{0,0,cfg_false,0,0},0,{0},0,0,0,0}
+   {0,CFGT_NONE,0,0,CFGF_NONE,0,{0,0,cfg_false,0,0},0,{0},0,0,0,0,0}
 
 
 
