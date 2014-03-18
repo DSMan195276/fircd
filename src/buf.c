@@ -72,7 +72,8 @@ static struct buf_blk *new_buf_block(struct buf_fd *buf)
 
 void buf_handle_input(struct buf_fd *buf)
 {
-    size_t size = 200, read_size, tmp, offset;
+    size_t size = 200, tmp, offset;
+    ssize_t read_size;
     struct buf_blk *cur_block, *tmp_blk;
     char tmpbuf[size];
 
@@ -129,7 +130,7 @@ char *buf_read_line(struct buf_fd *buf)
 {
     size_t size = 0;
     char *ret, *curstr;
-    int i, found_newline = 0;
+    unsigned int i, found_newline = 0;
     struct buf_blk *cur_block, *tmp;
 
     if (buf->has_line == 0)

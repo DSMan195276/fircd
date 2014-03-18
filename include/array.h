@@ -15,7 +15,7 @@
 
 #define ARRAY(type, name) \
     struct { \
-        unsigned int _size, _alloc; \
+        ssize_t _size, _alloc; \
         type *arr; \
     } name
 
@@ -24,9 +24,9 @@
 
 #define ARRAY_RESIZE(array, size) \
     do { \
-        unsigned int size_tmp = (size), total_size = 0; \
+        ssize_t size_tmp = (size), total_size = 0; \
         void *start = (array).arr; \
-        const unsigned int block_size = 100; \
+        const ssize_t block_size = 100; \
         if ((array)._alloc <= (size_tmp)) { \
             do { \
                 total_size += block_size; \

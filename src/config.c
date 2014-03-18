@@ -92,7 +92,7 @@ void config_init(void)
 
 static void add_network(cfg_t *network)
 {
-    int i;
+    unsigned int i;
     cfg_opt_t *opt;
     struct network *net = malloc(sizeof(struct network));
 
