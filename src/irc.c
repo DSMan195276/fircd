@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -165,75 +166,59 @@ void irc_connect (struct network *net)
     fcntl(net->sock.fd, F_SETFL, O_NONBLOCK | fcntl(net->sock.fd, F_GETFL));
 }
 
-void irc_send_raw (struct network *net, const char *text)
+void irc_send_raw (struct network *net, const char *text, ...)
 {
+    va_list list;
     DEBUG_PRINT("%s: %s", net->name, text);
-    write(net->sock.fd, text, strlen(text));
+
+    va_start(list, text);
+    fdprintfv(net->sock.fd, text, list);
+    va_end(list);
+
     write(net->sock.fd, CRLF, 2);
 }
 
 void irc_nick (struct network *net)
 {
-    char *buf;
-    buf = alloc_sprintf("NICK %s", net->nickname);
-    irc_send_raw(net, buf);
-    free(buf);
+    irc_send_raw(net, "NICK %s", net->nickname);
 }
 
 void irc_user (struct network *net)
 {
-    char *buf;
     if (net->realname)
-        buf = alloc_sprintf("USER %s 0 * :%s", net->nickname, net->realname);
+        irc_send_raw(net, "USER %s 0 * :%s", net->nickname, net->realname);
     else
-        buf = alloc_sprintf("USER %s 0 * :%s", net->nickname, net->nickname);
-    irc_send_raw(net, buf);
-    free(buf);
+        irc_send_raw(net, "USER %s 0 * :%s", net->nickname, net->nickname);
 }
 
 void irc_pass (struct network *net)
 {
-    char *buf;
-    buf = alloc_sprintf("PASS %s", net->password);
-    irc_send_raw(net, buf);
-    free(buf);
+    irc_send_raw(net, "PASS %s", net->password);
 }
 
 void irc_join (struct network *net, const char *chan)
 {
-    char *buf;
-    buf = alloc_sprintf("JOIN %s", chan);
-    irc_send_raw(net, buf);
-    free(buf);
+    irc_send_raw(net, "JOIN %s", chan);
 }
 
 void irc_part (struct network *net, const char *chan, const char *msg)
 {
-    char *buf;
     if (msg)
-        buf = alloc_sprintf("PART %s :%s", chan, msg);
+        irc_send_raw(net, "PART %s :%s", chan, msg);
     else
-        buf = alloc_sprintf("PART %s", chan);
-    irc_send_raw(net, buf);
-    free(buf);
+        irc_send_raw(net, "PART %s", chan);
 }
 
 void irc_quit (struct network *net, const char *msg)
 {
-    char *buf;
     if (msg)
-        buf = alloc_sprintf("QUIT :%s", msg);
+        irc_send_raw(net, "QUIT :%s", msg);
     else
-        buf = alloc_sprintf("QUIT");
-    irc_send_raw(net, buf);
-    free(buf);
+        irc_send_raw(net, "QUIT");
 }
 
 void irc_privmsg (struct network *net, const char *chan, const char *text)
 {
-    char *buf;
-    buf = alloc_sprintf("PRIVMSG %s :%s", chan, text);
-    irc_send_raw(net, buf);
-    free(buf);
+    irc_send_raw(net, "PRIVMSG %s :%s", chan, text);
 }
 

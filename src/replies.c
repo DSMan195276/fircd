@@ -22,9 +22,7 @@ static void r_default(struct network *net, struct irc_reply *rpl)
 
 static void r_ping(struct network *net, struct irc_reply *rpl)
 {
-    char *tmp = alloc_sprintf("PONG :%s", rpl->colon);
-    irc_send_raw(net, tmp);
-    free(tmp);
+    irc_send_raw(net, "PONG :%s", rpl->colon);
 }
 
 static void r_privmsg(struct network *net, struct irc_reply *rpl)

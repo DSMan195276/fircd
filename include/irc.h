@@ -114,7 +114,7 @@ struct irc_reply {
 extern struct irc_reply *irc_parse_line (const char *line);
 
 extern void irc_reply_free (struct irc_reply *rpl);
-extern void irc_send_raw   (struct network *, const char *text);
+extern void irc_send_raw   (struct network *, const char *text, ...);
 extern void irc_connect    (struct network *);
 extern void irc_nick       (struct network *);
 extern void irc_user       (struct network *);
