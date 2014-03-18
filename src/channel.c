@@ -27,10 +27,12 @@
 #include "net_cons.h"
 #include "rbtree.h"
 #include "user.h"
+#include "fassert.h"
 #include "channel.h"
 
 void channel_init (struct channel *chan)
 {
+    fassert(chan);
     memset(chan, 0, sizeof(struct channel));
 
     buf_init(&chan->in);
@@ -38,6 +40,7 @@ void channel_init (struct channel *chan)
 
 void channel_clear (struct channel *current)
 {
+    fassert(current);
     struct channel_irc_user_node *user, *tmp;
 
     CLOSE_FD(current->in.fd);
@@ -64,6 +67,7 @@ void channel_clear (struct channel *current)
 
 void channel_create_files (struct channel *chan)
 {
+    fassert(chan);
     mkdir(chan->name, 0775);
     chdir(chan->name);
 
@@ -81,6 +85,7 @@ void channel_create_files (struct channel *chan)
 
 void channel_remove_files (struct channel *chan)
 {
+    fassert(chan);
     chdir(chan->name);
 
     unlink("in");
@@ -100,6 +105,9 @@ static void channel_write_raw_timestamp(struct channel *chan)
     struct tm *tmp;
     char time_buf[100];
     size_t len;
+
+    fassert(chan);
+
     time(&cur_time);
     tmp = localtime(&cur_time);
 
@@ -111,6 +119,10 @@ static void channel_write_msg(struct channel *chan, const char *user, const char
 {
     const char *format = " <%s> : %s\n";
 
+    fassert(chan);
+    fassert(user);
+    fassert(line);
+
     DEBUG_PRINT("Writing msg: %s: %s", user, line);
     fdprintf(chan->msgsfd, format, user, line);
     fdprintf(chan->outfd, format, user, line);
@@ -121,6 +133,8 @@ static void channel_write_msg(struct channel *chan, const char *user, const char
 
 static void channel_write_topic(struct channel *chan)
 {
+    fassert(chan);
+
     ftruncate(chan->topicfd, 0);
     lseek(chan->topicfd, 0, SEEK_SET);
 
@@ -134,6 +148,8 @@ static void channel_write_users(struct channel *chan)
 {
     struct irc_user *user;
 
+    fassert(chan);
+
     ftruncate(chan->onlinefd, 0);
     lseek(chan->onlinefd, 0, SEEK_SET);
 
@@ -145,6 +161,11 @@ static void channel_write_users(struct channel *chan)
 
 void channel_reg_select (struct channel *chan, fd_set *infd, fd_set *outfd, int *maxfd)
 {
+    fassert(chan);
+    fassert(infd);
+    fassert(outfd);
+    fassert(maxfd);
+
     if (chan->in.fd != -1) {
         FD_SET(chan->in.fd, infd);
         if (chan->in.fd > *maxfd)
@@ -154,6 +175,10 @@ void channel_reg_select (struct channel *chan, fd_set *infd, fd_set *outfd, int 
 
 void channel_handle_input (struct channel *chan, fd_set *infd, fd_set *outfd)
 {
+    fassert(chan);
+    fassert(infd);
+    fassert(outfd);
+
     if (FD_ISSET(chan->in.fd, infd)) {
         buf_handle_input(&(chan->in));
         while (chan->in.has_line > 0) {
@@ -169,6 +194,10 @@ void channel_handle_input (struct channel *chan, fd_set *infd, fd_set *outfd)
 
 void channel_new_topic (struct channel *chan, const char *user, const char *topic)
 {
+    fassert(chan);
+    fassert(user);
+    fassert(topic);
+
     if (chan->topic)
         free(chan->topic);
     if (chan->topic_user)
@@ -195,12 +224,19 @@ void channel_new_topic (struct channel *chan, const char *user, const char *topi
 
 void channel_new_message (struct channel *chan, const char *user, const char *line)
 {
+    fassert(chan);
+    fassert(user);
+    fassert(line);
+
     channel_write_msg(chan, user, line);
 }
 
 void channel_user_online(struct channel *chan, const struct irc_user *user_cpy)
 {
     struct channel_irc_user_node *user, **current;
+
+    fassert(chan);
+    fassert(user_cpy);
 
     user = malloc(sizeof(*user));
     user->next = NULL;
@@ -228,6 +264,9 @@ void channel_user_online(struct channel *chan, const struct irc_user *user_cpy)
 
 void channel_user_join(struct channel *chan, const struct irc_user *user_cpy)
 {
+    fassert(chan);
+    fassert(user_cpy);
+
     channel_user_online(chan, user_cpy);
 
     fdprintf(chan->outfd, "join > %s\n", user_cpy->nick);
@@ -239,6 +278,9 @@ void channel_user_join(struct channel *chan, const struct irc_user *user_cpy)
 static int try_remove_user (struct channel *chan, const char *nick)
 {
     struct channel_irc_user_node **user, *found;
+
+    fassert(chan);
+    fassert(nick);
 
     for (user = &chan->first_user; *user != NULL; user = &((*user)->next)) {
         int cmp = strcmp((*user)->user.nick, nick);
@@ -262,6 +304,9 @@ static int try_remove_user (struct channel *chan, const char *nick)
 
 void channel_user_part (struct channel *chan, const char *nick)
 {
+    fassert(chan);
+    fassert(nick);
+
     if (!try_remove_user(chan, nick))
         return;
 
@@ -277,6 +322,9 @@ void channel_user_part (struct channel *chan, const char *nick)
 
 void channel_user_quit (struct channel *chan, const char *nick)
 {
+    fassert(chan);
+    fassert(nick);
+
     if (!try_remove_user(chan, nick))
         return;
 
@@ -293,6 +341,10 @@ void channel_user_quit (struct channel *chan, const char *nick)
 void channel_change_user(struct channel *chan, const char *old, const char *new)
 {
     struct channel_irc_user_node **user, *found;
+
+    fassert(chan);
+    fassert(old);
+    fassert(new);
 
     for (user = &chan->first_user; *user != NULL; user = &((*user)->next)) {
         int cmp = strcmp((*user)->user.nick, old);
