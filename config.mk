@@ -11,7 +11,8 @@ CFLAGS  := -Wall -I'./include' -O2 -std=c99           \
            -DFIRCD_VERSION=$(VERSION)                 \
            -DFIRCD_SUBLEVEL=$(SUBLEVEL)               \
            -DFIRCD_PATCH=$(PATCH)                     \
-           -DFIRCD_VERSION_N="$(VERSION_N)"
+           -DFIRCD_VERSION_N="$(VERSION_N)"           \
+		   -D_FORTIFY_SOURCE=0
 LDFLAGS ?=
 LEX     := flex
 LFLAGS  := -Pcfg_yy
