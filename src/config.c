@@ -48,7 +48,7 @@ static cfg_opt_t main_opts[] = {
     CFG_END()
 };
 
-static int strcasecmp(const char *s1, const char *s2)
+static int stringcasecmp(const char *s1, const char *s2)
 {
     for (; *s1 && *s2; s1++, s2++)
         if ((*s1 | 32) != (*s2 | 32))
@@ -62,11 +62,11 @@ static int strcasecmp(const char *s1, const char *s2)
 
 static int login_type_callback(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
 {
-    if (strcasecmp(value, "nickserv") == 0) {
+    if (stringcasecmp(value, "nickserv") == 0) {
         *(int *)result = LOGIN_NICKSERV;
-    } else if (strcasecmp(value, "sasl") == 0) {
+    } else if (stringcasecmp(value, "sasl") == 0) {
         *(int *)result = LOGIN_SASL;
-    } else if (strcasecmp(value, "none") == 0) {
+    } else if (stringcasecmp(value, "none") == 0) {
         *(int *)result = LOGIN_NONE;
     } else {
         cfg_error(cfg, "Invalid value for option '%s': %s", cfg_opt_name(opt), value);
