@@ -22,10 +22,10 @@
 #define QQ(x) #x
 #define Q(x) QQ(x)
 
-extern char *alloc_sprintf(const char *format, ...);
-extern char *alloc_sprintfv(const char *format, va_list list);
+extern int alloc_sprintf(char **buf, const char *format, ...);
+extern int alloc_sprintfv(char **buf, const char *format, va_list list);
 
-#define fdprintf(...) dprintf(__VA_ARGS__)
-#define fdprintfv(str, list) dprintfv(str, list)
+extern void fdprintfv(const int fd, const char *format, va_list list);
+extern void fdprintf (const int fd, const char *format, ...);
 
 #endif
