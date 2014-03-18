@@ -56,6 +56,20 @@ static int cfg_parse_internal(cfg_t *cfg, int level,
 #define STATE_EOF -1
 #define STATE_ERROR 1
 
+static char *strndup_real(const char *s, size_t n)
+{
+    char *r;
+
+    if(s == 0)
+        return 0;
+
+    r = malloc(n + 1);
+    assert(r);
+    strncpy(r, s, n);
+    r[n] = 0;
+    return r;
+}
+
 int strcasecmp(const char *s1, const char *s2)
 {
     assert(s1);
@@ -101,7 +115,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
             /* no more subsections */
             break;
         if (len) {
-            secname = strndup(name, len);
+            secname = strndup_real(name, len);
             sec = cfg_getsec(sec, secname);
             if (sec == 0)
                 cfg_error(cfg, _("no such option '%s'"), secname);
@@ -1572,7 +1586,7 @@ static cfg_opt_t *cfg_getopt_array(cfg_opt_t *rootopts, int cfg_flags,
             break;
         if (len) {
             cfg_opt_t *secopt;
-            secname = strndup(name, len);
+            secname = strndup_real(name, len);
             secopt = cfg_getopt_array(opts, cfg_flags, secname);
             free(secname);
             if (secopt == 0) {
