@@ -2,6 +2,7 @@
 # This defines the names of all the tests we should run
 TESTS := confuse
 TESTS += confuse_dup_suite
+TESTS += confuse_validate_suite
 #TESTS += confuse_list_suite # Currently not run, confuse has some seg fault
                              # issues with it
 
@@ -18,6 +19,7 @@ TESTS += confuse_dup_suite
 # more the one test program per ./src file.
 confuse.SRC := ./test/confuse_test.c ./src/confuse.c ./src/lex/lexer.c
 confuse_dup_suite.SRC := ./test/confuse_dup_test.c ./src/confuse.c ./src/lex/lexer.c
+confuse_validate_suite.SRC := ./test/confuse_validate_test.c ./src/confuse.c ./src/lex/lexer.c
 confuse_list_suite.SRC := ./test/confuse_list_test.c ./src/confuse.c ./src/lex/lexer.c
 
 # This template generates a list of the outputted test executables, as well as
