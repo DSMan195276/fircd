@@ -7,7 +7,7 @@ VERSION_N := $(VERSION).$(SUBLEVEL).$(PATCH)
 
 # Compiler settings
 CC      ?= cc
-CFLAGS  := -Wall -I'./include' -O2 -std=c99           \
+CFLAGS  := -Wall -I'./include' -O2 -std=gnu99         \
            -DFIRCD_VERSION=$(VERSION)                 \
            -DFIRCD_SUBLEVEL=$(SUBLEVEL)               \
            -DFIRCD_PATCH=$(PATCH)                     \
