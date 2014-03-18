@@ -23,7 +23,7 @@ void log_close(void);
 
 #define log_and_die(...) \
     do { \
-        log_debug(__VA_ARGS__); \
+        log_err(__VA_ARGS__); \
         _Exit(0); \
     } while (0)
 
